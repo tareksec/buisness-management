@@ -2,13 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Drawer } from "vaul";
 import {
-  Activity, ArrowRight, Landmark, Network, Pencil, ShieldCheck, Truck, Monitor, User,
+  Activity, ArrowRight, Landmark, Network, Pencil, ShieldCheck, Truck, Monitor,
 } from "lucide-react";
 import { fundedPercent } from "@/data/mock";
 import { useApp, type TKey } from "@/lib/app-state";
 import { StatusBadge, type Tone } from "@/components/StatusBadge";
 import { PreviewFooter } from "@/components/PreviewFooter";
 import { BusinessPills } from "@/components/BusinessPills";
+import { AvatarMenu } from "@/components/AvatarMenu";
+import { UpdateCard } from "@/components/UpdateCard";
 import { cn } from "@/lib/utils";
 import investmentImg from "@/assets/zones/investment.webp";
 import supplyImg from "@/assets/zones/supply.webp";
@@ -80,30 +82,30 @@ function Home() {
     <div className="px-5 pt-6">
       {/* Header */}
       <header className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-[11px] font-semibold tracking-[0.16em] text-muted-foreground">{t("workspace")}</p>
           <h1 className="mt-1 text-[28px] leading-tight font-extrabold tracking-tight">{t("title")}</h1>
         </div>
-        <div className="flex items-center gap-2 pt-1">
-          <div className="flex rounded-full border bg-card p-0.5 text-xs font-semibold" role="group" aria-label="Language">
+        <div className="flex shrink-0 items-center gap-2 pt-1">
+          <div className="flex rounded-full border bg-card p-0.5 text-xs font-semibold" role="group" aria-label={t("language")}>
             {(["en", "bn"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
                 aria-pressed={lang === l}
-                className={cn("rounded-full px-2.5 py-1 transition-colors", lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                className={cn("min-h-10 min-w-11 rounded-full px-2.5 transition-colors", lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
               >
                 {l === "en" ? "EN" : "বাংলা"}
               </button>
             ))}
           </div>
-          <button aria-label="Profile" className="grid size-10 place-items-center rounded-full border bg-card shadow-soft">
-            <User className="size-5" />
-          </button>
+          <AvatarMenu />
         </div>
       </header>
 
       <BusinessPills className="mt-5" />
+
+      <UpdateCard />
 
       <div className="mt-6 flex items-baseline justify-between">
         <h2 className="text-[15px] font-semibold">{t("glance")}</h2>

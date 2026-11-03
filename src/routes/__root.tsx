@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider, useApp } from "@/lib/app-state";
 import { Toaster } from "sonner";
+import { LockScreen } from "@/components/LockScreen";
 
 function NotFoundComponent() {
   return (
@@ -100,7 +101,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function PhoneFrame() {
-  const { lang } = useApp();
+  const { lang, locked } = useApp();
   const { pathname } = useLocation();
   return (
     <div className="flex min-h-screen justify-center sm:items-center sm:py-8">
@@ -109,9 +110,13 @@ function PhoneFrame() {
         className="relative w-full max-w-[430px] overflow-hidden bg-background sm:h-[880px] sm:rounded-[44px] sm:border-[10px] sm:border-primary sm:shadow-phone"
       >
         <div className="no-scrollbar h-full min-h-screen overflow-y-auto sm:min-h-0">
-          <div key={pathname} className="animate-screen-in min-h-full">
-            <Outlet />
-          </div>
+          {locked ? (
+            <LockScreen />
+          ) : (
+            <div key={pathname} className="animate-screen-in min-h-full">
+              <Outlet />
+            </div>
+          )}
         </div>
       </div>
     </div>

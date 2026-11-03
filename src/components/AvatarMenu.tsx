@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Info, Lock, ShieldCheck, Smartphone, User } from "lucide-react";
 import { useApp } from "@/lib/app-state";
 import { appInfo } from "@/data/mock";
-import { Sheet } from "@/components/Sheets";
+import { Sheet, SheetTitle } from "@/components/Sheets";
 import { cn } from "@/lib/utils";
 
 export function AvatarMenu() {
@@ -14,7 +14,7 @@ export function AvatarMenu() {
         <User className="size-5" />
       </button>
       <Sheet open={open} onClose={() => setOpen(false)}>
-        <h2 className="text-lg font-bold">{t("profile")}</h2>
+        <SheetTitle className="text-lg font-bold">{t("profile")}</SheetTitle>
         <div className="mt-4 space-y-3">
           <div className="rounded-2xl border p-3">
             <p className="text-xs font-semibold text-muted-foreground">{t("language")}</p>

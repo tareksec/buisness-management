@@ -13,7 +13,7 @@ export function BusinessPills({ className }: { className?: string }) {
             onClick={() => setBusinessId(biz.id)}
             aria-pressed={active}
             className={cn(
-              "relative shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+              "relative min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold transition-colors",
               active ? "border-primary bg-primary text-primary-foreground" : "bg-card text-foreground",
             )}
           >
