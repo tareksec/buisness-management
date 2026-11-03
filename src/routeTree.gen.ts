@@ -10,33 +10,92 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as SupplyChainRouteImport } from './routes/supply-chain'
+import { Route as VaultRouteImport } from './routes/vault'
+import { Route as WebsiteRouteImport } from './routes/website'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApprovalsRoute = ApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupplyChainRoute = SupplyChainRouteImport.update({
+  id: '/supply-chain',
+  path: '/supply-chain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VaultRoute = VaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteRoute = WebsiteRouteImport.update({
+  id: '/website',
+  path: '/website',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
+  '/dashboard': typeof DashboardRoute
+  '/supply-chain': typeof SupplyChainRoute
+  '/vault': typeof VaultRoute
+  '/website': typeof WebsiteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
+  '/dashboard': typeof DashboardRoute
+  '/supply-chain': typeof SupplyChainRoute
+  '/vault': typeof VaultRoute
+  '/website': typeof WebsiteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/approvals': typeof ApprovalsRoute
+  '/dashboard': typeof DashboardRoute
+  '/supply-chain': typeof SupplyChainRoute
+  '/vault': typeof VaultRoute
+  '/website': typeof WebsiteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/approvals' | '/dashboard' | '/supply-chain' | '/vault' | '/website'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    '/' | '/approvals' | '/dashboard' | '/supply-chain' | '/vault' | '/website'
+  id:
+    | '__root__'
+    | '/'
+    | '/approvals'
+    | '/dashboard'
+    | '/supply-chain'
+    | '/vault'
+    | '/website'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApprovalsRoute: typeof ApprovalsRoute
+  DashboardRoute: typeof DashboardRoute
+  SupplyChainRoute: typeof SupplyChainRoute
+  VaultRoute: typeof VaultRoute
+  WebsiteRoute: typeof WebsiteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +107,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/approvals': {
+      id: '/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supply-chain': {
+      id: '/supply-chain'
+      path: '/supply-chain'
+      fullPath: '/supply-chain'
+      preLoaderRoute: typeof SupplyChainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vault': {
+      id: '/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website': {
+      id: '/website'
+      path: '/website'
+      fullPath: '/website'
+      preLoaderRoute: typeof WebsiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApprovalsRoute: ApprovalsRoute,
+  DashboardRoute: DashboardRoute,
+  SupplyChainRoute: SupplyChainRoute,
+  VaultRoute: VaultRoute,
+  WebsiteRoute: WebsiteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
