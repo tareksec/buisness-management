@@ -1,25 +1,8 @@
+import type { Text, ApprovalKind, Approval, Business, ProjectStatus, Split, Project, PayoutBatch, Stage, StockItem, LowStock, ImportShipment, ProductImage, Product } from "@/types";
+export type * from "@/types";
 // All sample data for the preview. Swap with real data later.
-export type Text = { en: string; bn: string };
 
-export type ApprovalKind = "payout" | "voucher" | "transfer" | "kyc" | "bank" | "dispatch";
-export type Approval = {
-  id: string;
-  kind: ApprovalKind;
-  amount?: number;
-  title: Text;
-  detail: Text;
-  dispatch?: { order: string; customer: Text; items: number };
-};
 
-export type Business = {
-  id: string;
-  name: Text;
-  updatedMinutesAgo: number;
-  investment: { activeProjects: number; raised: number; needed: number; profit: number };
-  supply: { inStock: number; onTheWay: number; deliveredToday: number; lowStock: number };
-  website: { online: boolean; productsLive: number; productsHidden: number; siteName: Text; domain: string };
-  approvals: Approval[];
-};
 
 const by = (en: string, bn: string, h: number): Text => ({
   en: `Sent by ${en} · ${h} hour${h === 1 ? "" : "s"} ago`,
@@ -84,15 +67,6 @@ export const fundedPercent = (b: Business) =>
   Math.round((b.investment.raised / b.investment.needed) * 100);
 
 // ---------- Investment Vault ----------
-export type ProjectStatus = "raising" | "running" | "settled";
-export type Split = { investors: number; partner: number; company: number };
-export type Project = {
-  id: string; name: Text; code: string; status: ProjectStatus;
-  goal: number; raised: number; profit: number; contract: Split;
-};
-export type PayoutBatch = {
-  id: string; batch: string; investors: number; total: number; preparedBy: Text;
-};
 
 const projectNames: Text[] = [
   { en: "Project Alpha", bn: "প্রজেক্ট আলফা" },
@@ -136,10 +110,6 @@ export const vault: Record<string, { projects: Project[]; payouts: PayoutBatch[]
 );
 
 // ---------- Supply Chain ----------
-export type Stage = "stock" | "transit" | "delivered";
-export type StockItem = { id: string; product: Text; qty: number; party: Text; date: Text; stage: Stage };
-export type LowStock = { id: string; product: Text; left: number; min: number };
-export type ImportShipment = { id: string; container: string; from: Text; eta: Text; status: Text };
 
 const P = {
   tote: { en: "Jute tote bag", bn: "পাটের ব্যাগ" }, saree: { en: "Cotton saree", bn: "সুতি শাড়ি" },
@@ -208,8 +178,6 @@ export const supply: Record<string, { items: StockItem[]; low: LowStock[]; impor
 };
 
 // ---------- Website products ----------
-export type ProductImage = "tote" | "saree" | "honey" | "teacup" | "oil" | "wallet";
-export type Product = { id: string; name: Text; price: number; live: boolean; image: ProductImage; deal?: number };
 
 export const products: Record<string, Product[]> = {
   b1: [
