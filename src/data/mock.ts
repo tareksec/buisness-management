@@ -1,25 +1,8 @@
+import type { Text, ApprovalKind, Approval, Business, ProjectStatus, Split, Project, PayoutBatch, Stage, StockItem, LowStock, ImportShipment, ProductImage, Product, DashboardStats, AttentionItem, AppInfo } from "@/types";
+export type * from "@/types";
 // All sample data for the preview. Swap with real data later.
-export type Text = { en: string; bn: string };
 
-export type ApprovalKind = "payout" | "voucher" | "transfer" | "kyc" | "bank" | "dispatch";
-export type Approval = {
-  id: string;
-  kind: ApprovalKind;
-  amount?: number;
-  title: Text;
-  detail: Text;
-  dispatch?: { order: string; customer: Text; items: number };
-};
 
-export type Business = {
-  id: string;
-  name: Text;
-  updatedMinutesAgo: number;
-  investment: { activeProjects: number; raised: number; needed: number; profit: number };
-  supply: { inStock: number; onTheWay: number; deliveredToday: number; lowStock: number };
-  website: { online: boolean; productsLive: number; productsHidden: number; siteName: Text; domain: string };
-  approvals: Approval[];
-};
 
 const by = (en: string, bn: string, h: number): Text => ({
   en: `Sent by ${en} · ${h} hour${h === 1 ? "" : "s"} ago`,
@@ -84,15 +67,6 @@ export const fundedPercent = (b: Business) =>
   Math.round((b.investment.raised / b.investment.needed) * 100);
 
 // ---------- Investment Vault ----------
-export type ProjectStatus = "raising" | "running" | "settled";
-export type Split = { investors: number; partner: number; company: number };
-export type Project = {
-  id: string; name: Text; code: string; status: ProjectStatus;
-  goal: number; raised: number; profit: number; contract: Split;
-};
-export type PayoutBatch = {
-  id: string; batch: string; investors: number; total: number; preparedBy: Text;
-};
 
 const projectNames: Text[] = [
   { en: "Project Alpha", bn: "প্রজেক্ট আলফা" },
@@ -136,10 +110,6 @@ export const vault: Record<string, { projects: Project[]; payouts: PayoutBatch[]
 );
 
 // ---------- Supply Chain ----------
-export type Stage = "stock" | "transit" | "delivered";
-export type StockItem = { id: string; product: Text; qty: number; party: Text; date: Text; stage: Stage };
-export type LowStock = { id: string; product: Text; left: number; min: number };
-export type ImportShipment = { id: string; container: string; from: Text; eta: Text; status: Text };
 
 const P = {
   tote: { en: "Jute tote bag", bn: "পাটের ব্যাগ" }, saree: { en: "Cotton saree", bn: "সুতি শাড়ি" },
@@ -208,8 +178,6 @@ export const supply: Record<string, { items: StockItem[]; low: LowStock[]; impor
 };
 
 // ---------- Website products ----------
-export type ProductImage = "tote" | "saree" | "honey" | "teacup" | "oil" | "wallet";
-export type Product = { id: string; name: Text; price: number; live: boolean; image: ProductImage; deal?: number };
 
 export const products: Record<string, Product[]> = {
   b1: [
@@ -235,4 +203,28 @@ export const products: Record<string, Product[]> = {
     { id: "w2", name: { en: "Leather card holder", bn: "চামড়ার কার্ড হোল্ডার" }, price: 690, live: true, image: "wallet" },
     { id: "w3", name: P.tote, price: 650, live: true, image: "tote" },
   ],
+};
+
+// ---------- Dashboard ----------
+export const dashboard: Record<string, DashboardStats> = {
+  b1: { currency: "BDT", moneyIn: 1840000, profitPaid: 182500, payoutsDue: 372000, sales: 2650000, profitByMonth: [92000, 104000, 98000, 121000, 133000, 118000, 142000, 150000, 139000, 161000, 174000, 182500] },
+  b2: { currency: "BDT", moneyIn: 760000, profitPaid: 96000, payoutsDue: 0, sales: 1120000, profitByMonth: [41000, 46000, 52000, 49000, 58000, 63000, 61000, 70000, 76000, 81000, 88000, 96000] },
+  b3: { currency: "BDT", moneyIn: 290000, profitPaid: 31000, payoutsDue: 120000, sales: 410000, profitByMonth: [22000, 18000, 25000, 27000, 21000, 30000, 28000, 26000, 33000, 29000, 35000, 31000] },
+  b4: { currency: "USD", moneyIn: 14200, profitPaid: 3100, payoutsDue: 0, sales: 21800, profitByMonth: [1400, 1650, 1500, 1900, 2100, 2000, 2350, 2500, 2400, 2750, 2900, 3100] },
+};
+
+export const attention: AttentionItem[] = [
+  { id: "t1", businessId: "b1", text: { en: "2 money approvals need your PIN", bn: "২টি টাকার অনুমোদনে আপনার পিন লাগবে" }, to: "/approvals", tone: "bad" },
+  { id: "t2", businessId: "b1", text: { en: "3 products are low on stock", bn: "৩টি পণ্যের স্টক কম" }, to: "/supply-chain", tone: "warn" },
+  { id: "t3", businessId: "b1", text: { en: "Payout batch ready for 24 investors", bn: "২৪ জন বিনিয়োগকারীর পেআউট প্রস্তুত" }, to: "/vault", tone: "warn" },
+  { id: "t4", businessId: "b3", text: { en: "Website is offline", bn: "ওয়েবসাইট বন্ধ আছে" }, to: "/website", tone: "bad" },
+  { id: "t5", businessId: "b3", text: { en: "5 products are low on stock", bn: "৫টি পণ্যের স্টক কম" }, to: "/supply-chain", tone: "warn" },
+  { id: "t6", businessId: "b4", text: { en: "New investor waiting for review", bn: "নতুন বিনিয়োগকারী যাচাইয়ের অপেক্ষায়" }, to: "/approvals", tone: "warn" },
+];
+
+export const appInfo: AppInfo = {
+  name: { en: "Business Command", bn: "বিজনেস কমান্ড" },
+  version: "1.0.0",
+  latestVersion: "1.1.0",
+  deviceName: { en: "Owner's phone", bn: "মালিকের ফোন" },
 };

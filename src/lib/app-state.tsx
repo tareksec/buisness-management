@@ -1,3 +1,4 @@
+import type React from "react";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import en from "@/i18n/en.json";
 import bn from "@/i18n/bn.json";
@@ -33,15 +34,25 @@ type Ctx = {
   setSiteOnline: (businessId: string, online: boolean) => void;
   businessId: string;
   setBusinessId: (id: string) => void;
+  locked: boolean;
+  unlock: () => void;
+  lock: () => void;
+  showUpdate: boolean;
+  dismissUpdate: () => void;
 };
 
-const AppCtx = createContext<Ctx | null>(null);
+// Keep one context across hot reloads so an edited module never orphans the provider.
+const g = globalThis as { __appCtx?: React.Context<Ctx | null> };
+const AppCtx = (g.__appCtx ??= createContext<Ctx | null>(null));
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en");
   const [businessId, setBusinessId] = useState(businesses[0]!.id);
   const [resolved, setResolved] = useState<Set<string>>(() => new Set());
   const [siteOverride, setSiteOverride] = useState<Record<string, boolean>>({});
+  const [locked, setLocked] = useState(true);
+  // null = never unlocked yet; the update card appears after the first unlock until dismissed.
+  const [showUpdate, setShowUpdate] = useState<boolean | null>(null);
   const value = useMemo<Ctx>(() => {
     const merged = businesses.map((b) => ({
       ...b,
@@ -68,8 +79,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSiteOnline: (bid, online) => setSiteOverride((o) => ({ ...o, [bid]: online })),
       businessId,
       setBusinessId,
+      locked,
+      unlock: () => { setLocked(false); setShowUpdate((v) => (v === null ? true : v)); },
+      lock: () => setLocked(true),
+      showUpdate: showUpdate === true,
+      dismissUpdate: () => setShowUpdate(false),
     };
-  }, [lang, businessId, resolved, siteOverride]);
+  }, [lang, businessId, resolved, siteOverride, locked, showUpdate]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

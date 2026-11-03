@@ -8,7 +8,7 @@ export function ScreenHeader({ titleKey }: { titleKey: TKey }) {
   return (
     <>
       <header className="flex items-center gap-3">
-        <Link to="/" aria-label={t("back")} className="grid size-10 shrink-0 place-items-center rounded-full border bg-card shadow-soft">
+        <Link to="/" aria-label={t("back")} className="grid size-11 shrink-0 place-items-center rounded-full border bg-card shadow-soft">
           <ArrowLeft className="size-5" />
         </Link>
         <h1 className="text-2xl font-extrabold tracking-tight">{t(titleKey)}</h1>

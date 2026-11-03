@@ -52,7 +52,7 @@ function ApprovalsScreen() {
           return (
             <button
               key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
-              className={cn("shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors", filter === f ? "border-primary bg-secondary text-foreground" : "bg-card text-muted-foreground")}
+              className={cn("min-h-11 shrink-0 rounded-full border px-3 text-xs font-semibold transition-colors", filter === f ? "border-primary bg-secondary text-foreground" : "bg-card text-muted-foreground")}
             >
               {t(k)}{n > 0 && <span className="ml-1 text-bad">· {n}</span>}
             </button>
@@ -82,8 +82,8 @@ function ApprovalsScreen() {
               <p className="mt-1.5 font-semibold leading-snug">{title}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{tx(a.detail)}</p>
               <div className="mt-3 flex gap-2">
-                <button onClick={() => setReject({ key, title })} className="flex-1 rounded-xl bg-bad-soft py-2.5 text-sm font-semibold text-bad">{t("reject")}</button>
-                <button onClick={() => setApprove({ key, title, pin, rows })} className="flex-1 rounded-xl bg-good py-2.5 text-sm font-semibold text-primary-foreground">{t("approve")}</button>
+                <button onClick={() => setReject({ key, title })} className="flex-1 min-h-11 rounded-xl bg-bad-soft py-2.5 text-sm font-semibold text-bad">{t("reject")}</button>
+                <button onClick={() => setApprove({ key, title, pin, rows })} className="flex-1 min-h-11 rounded-xl bg-good py-2.5 text-sm font-semibold text-primary-foreground">{t("approve")}</button>
               </div>
             </div>
           );

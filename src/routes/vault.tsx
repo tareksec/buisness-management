@@ -60,7 +60,7 @@ function VaultScreen() {
   return (
     <div className="px-5 pt-6">
       <header className="flex items-center gap-3">
-        <Link to="/" aria-label={t("back")} className="grid size-10 place-items-center rounded-full border bg-card shadow-soft">
+        <Link to="/" aria-label={t("back")} className="grid size-11 place-items-center rounded-full border bg-card shadow-soft">
           <ArrowLeft className="size-5" />
         </Link>
         <h1 className="text-2xl font-extrabold tracking-tight">{t("vaultTitle")}</h1>
@@ -118,7 +118,7 @@ function VaultScreen() {
         </p>
 
         <div className="mt-4 flex items-center gap-3">
-          <button onClick={() => step(-1)} aria-label={t("decrease")} disabled={split.investors <= 0} className="grid size-9 shrink-0 place-items-center rounded-full border disabled:opacity-40">
+          <button onClick={() => step(-1)} aria-label={t("decrease")} disabled={split.investors <= 0} className="grid size-11 shrink-0 place-items-center rounded-full border disabled:opacity-40">
             <Minus className="size-4" />
           </button>
           <input
@@ -127,7 +127,7 @@ function VaultScreen() {
             aria-label={t("investors")}
             className="h-2 flex-1 cursor-pointer accent-primary"
           />
-          <button onClick={() => step(1)} aria-label={t("increase")} disabled={split.investors >= maxInv} className="grid size-9 shrink-0 place-items-center rounded-full border disabled:opacity-40">
+          <button onClick={() => step(1)} aria-label={t("increase")} disabled={split.investors >= maxInv} className="grid size-11 shrink-0 place-items-center rounded-full border disabled:opacity-40">
             <Plus className="size-4" />
           </button>
         </div>
@@ -148,7 +148,7 @@ function VaultScreen() {
           <span className="text-muted-foreground">
             {t("contractLabel", { a: project.contract.investors, b: project.contract.partner, c: project.contract.company })}
           </span>
-          <button onClick={() => setSplit(project.contract)} disabled={isContract} className="inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline disabled:opacity-40">
+          <button onClick={() => setSplit(project.contract)} disabled={isContract} className="inline-flex min-h-11 shrink-0 items-center gap-1 font-semibold underline-offset-2 hover:underline disabled:opacity-40">
             <RotateCcw className="size-3" /> {t("resetContract")}
           </button>
         </div>
@@ -187,7 +187,7 @@ function VaultScreen() {
               <div className="mt-3 flex items-center justify-between gap-2">
                 <p className="text-xl font-extrabold tracking-tight">{money(pb.total)}</p>
                 {!approved[pb.id] && (
-                  <button onClick={() => setReviewing(pb)} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                  <button onClick={() => setReviewing(pb)} className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
                     {t("reviewApprove")}
                   </button>
                 )}
