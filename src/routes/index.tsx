@@ -87,13 +87,13 @@ function Home() {
           <h1 className="mt-1 text-[28px] leading-tight font-extrabold tracking-tight">{t("title")}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2 pt-1">
-          <div className="flex rounded-full border bg-card p-0.5 text-xs font-semibold" role="group" aria-label={t("language")}>
+          <div className="flex rounded-full border bg-card text-xs font-semibold" role="group" aria-label={t("language")}>
             {(["en", "bn"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
                 aria-pressed={lang === l}
-                className={cn("min-h-10 min-w-11 rounded-full px-2.5 transition-colors", lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                className={cn("min-h-11 min-w-11 rounded-full px-2.5 transition-colors", lang === l ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
               >
                 {l === "en" ? "EN" : "বাংলা"}
               </button>

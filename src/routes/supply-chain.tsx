@@ -122,10 +122,10 @@ function SupplyScreen() {
                   <p className="text-lg font-extrabold">{money(a.amount ?? 0)}</p>
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => setReject({ key, title })} className="flex-1 rounded-xl bg-bad-soft py-2.5 text-sm font-semibold text-bad">{t("reject")}</button>
+                  <button onClick={() => setReject({ key, title })} className="flex-1 min-h-11 rounded-xl bg-bad-soft py-2.5 text-sm font-semibold text-bad">{t("reject")}</button>
                   <button
                     onClick={() => setApprove({ key, title, pin: false, rows: [[t("totalAmount"), money(a.amount ?? 0)], [t("fDispatch"), t("items", { n: d.items })]] })}
-                    className="flex-[1.4] rounded-xl bg-good py-2.5 text-sm font-semibold text-primary-foreground"
+                    className="flex-[1.4] min-h-11 rounded-xl bg-good py-2.5 text-sm font-semibold text-primary-foreground"
                   >
                     {t("approveDispatch")}
                   </button>

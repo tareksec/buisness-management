@@ -67,7 +67,7 @@ function WebsiteScreen() {
           <p className="truncate text-xs text-muted-foreground">{b.website.domain}</p>
           <StatusBadge tone={b.website.online ? "good" : "bad"} className="mt-1.5">{b.website.online ? t("online") : t("offline")}</StatusBadge>
         </div>
-        <button onClick={() => setManage(true)} className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold">
+        <button onClick={() => setManage(true)} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold">
           <Settings2 className="size-4" /> {t("manage")}
         </button>
       </section>
@@ -122,7 +122,7 @@ function ProductCard({ p, onToggle, onPhoto, onPrice }: { p: Product & { photo: 
             </div>
           </div>
         ) : (
-          <button onClick={() => { setDraft(String(p.price)); setEditing(true); }} aria-label={t("editPrice")} className="mt-1 text-lg font-extrabold tracking-tight underline decoration-border decoration-dashed underline-offset-4">
+          <button onClick={() => { setDraft(String(p.price)); setEditing(true); }} aria-label={t("editPrice")} className="mt-1 min-h-11 min-w-11 text-left text-lg font-extrabold tracking-tight underline decoration-border decoration-dashed underline-offset-4">
             {money(p.price)}
           </button>
         )}
@@ -131,7 +131,7 @@ function ProductCard({ p, onToggle, onPhoto, onPrice }: { p: Product & { photo: 
             <Tag className="mt-px size-3 shrink-0" /> {t("dealLive", { p: `৳ ${num(p.deal)}` })}
           </p>
         )}
-        <button onClick={onToggle} role="switch" aria-checked={p.live} className="mt-2.5 flex w-full items-center justify-between">
+        <button onClick={onToggle} role="switch" aria-checked={p.live} className="mt-1 flex min-h-11 w-full items-center justify-between">
           <span className={cn("text-xs font-semibold", p.live ? "text-good" : "text-muted-foreground")}>{p.live ? t("live") : t("hidden")}</span>
           <span className={cn("relative h-6 w-10 rounded-full transition-colors", p.live ? "bg-good" : "bg-border")}>
             <span className={cn("absolute top-0.5 size-5 rounded-full bg-card shadow transition-all", p.live ? "left-[18px]" : "left-0.5")} />
