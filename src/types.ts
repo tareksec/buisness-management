@@ -34,3 +34,22 @@ export type LowStock = { id: string; product: Text; left: number; min: number };
 export type ImportShipment = { id: string; container: string; from: Text; eta: Text; status: Text };
 export type ProductImage = "tote" | "saree" | "honey" | "teacup" | "oil" | "wallet";
 export type Product = { id: string; name: Text; price: number; live: boolean; image: ProductImage; deal?: number };
+
+export type Currency = "BDT" | "USD";
+export type DashboardStats = {
+  currency: Currency;
+  moneyIn: number;
+  profitPaid: number;
+  payoutsDue: number;
+  sales: number;
+  /** Profit paid for the last 12 months, oldest first. */
+  profitByMonth: number[];
+};
+export type AttentionItem = {
+  id: string;
+  businessId: string;
+  text: Text;
+  to: "/approvals" | "/supply-chain" | "/website" | "/vault";
+  tone: "bad" | "warn";
+};
+export type AppInfo = { name: Text; version: string; latestVersion: string; deviceName: Text };
