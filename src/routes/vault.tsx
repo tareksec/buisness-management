@@ -148,7 +148,7 @@ function VaultScreen() {
           <span className="text-muted-foreground">
             {t("contractLabel", { a: project.contract.investors, b: project.contract.partner, c: project.contract.company })}
           </span>
-          <button onClick={() => setSplit(project.contract)} disabled={isContract} className="inline-flex items-center gap-1 font-semibold underline-offset-2 hover:underline disabled:opacity-40">
+          <button onClick={() => setSplit(project.contract)} disabled={isContract} className="inline-flex min-h-11 shrink-0 items-center gap-1 font-semibold underline-offset-2 hover:underline disabled:opacity-40">
             <RotateCcw className="size-3" /> {t("resetContract")}
           </button>
         </div>
