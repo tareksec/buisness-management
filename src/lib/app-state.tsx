@@ -1,3 +1,4 @@
+import type React from "react";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import en from "@/i18n/en.json";
 import bn from "@/i18n/bn.json";
@@ -40,7 +41,9 @@ type Ctx = {
   dismissUpdate: () => void;
 };
 
-const AppCtx = createContext<Ctx | null>(null);
+// Keep one context across hot reloads so an edited module never orphans the provider.
+const g = globalThis as { __appCtx?: React.Context<Ctx | null> };
+const AppCtx = (g.__appCtx ??= createContext<Ctx | null>(null));
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en");
