@@ -41,6 +41,12 @@ function WebsiteScreen() {
   const [details, setDetails] = useState(false);
   const [query, setQuery] = useState("");
   const [edits, setEdits] = useState<Edits>({});
+  const [undo, setUndo] = useState<{ businessId: string; id: string; live: boolean } | null>(null);
+  useEffect(() => {
+    if (!undo) return;
+    const timer = setTimeout(() => setUndo(null), 5000);
+    return () => clearTimeout(timer);
+  }, [undo]);
   const [manage, setManage] = useState(false);
   const [photoFor, setPhotoFor] = useState<Product | null>(null);
 
@@ -55,6 +61,7 @@ function WebsiteScreen() {
   const toggle = (p: ReturnType<typeof view>) => {
     const next = !p.live;
     patch(p.id, { live: next });
+    setUndo({ businessId, id: p.id, live: p.live });
     toast(t(next ? "nowLive" : "nowHidden", { name: tx(p.name) }), {
       duration: 5000,
       action: { label: t("undo"), onClick: () => patch(p.id, { live: !next }) },
@@ -85,6 +92,8 @@ function WebsiteScreen() {
         <Search className="size-4 text-muted-foreground" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="w-full bg-transparent py-3 text-sm outline-none" />
       </label>
+
+      {undo && undo.businessId === businessId && <Button variant="outline" className="mt-3 min-h-12 w-full" onClick={() => { patch(undo.id, { live: undo.live }); setUndo(null); }}>{t("undo")}</Button>}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         {list.map((p) => <ProductCard key={`${businessId}:${p.id}`} p={p} onToggle={() => toggle(p)} onPhoto={() => {setDetails(false);setPhotoFor(p)}} onPrice={(price) => patch(p.id, { price })} />)}
