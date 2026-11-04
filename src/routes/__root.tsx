@@ -125,11 +125,12 @@ function PhoneFrame() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { pathname } = useLocation();
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
         <PhoneFrame />
-        <Toaster position="top-center" toastOptions={{ className: "!rounded-2xl !font-sans" }} />
+        <Toaster position={pathname === "/" ? "top-center" : "bottom-center"} toastOptions={{ className: "!rounded-2xl !font-sans" }} />
       </AppProvider>
     </QueryClientProvider>
   );
