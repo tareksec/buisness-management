@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import type { Approval, ApprovalKind } from "@/data/mock";
 import { useApp, type TKey } from "@/lib/app-state";
 import { needsPin } from "@/lib/approvals";
-import { useLeaving } from "@/lib/use-leaving";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { ApproveSheet, RejectSheet, type ApproveTarget, type RejectTarget } from "@/components/Sheets";
 import { DetailsSheet, SeeDetails, StateSentence } from "@/components/IllustratedScreen";
@@ -36,74 +35,47 @@ const filters: [Filter, TKey][] = [
 const isMoney = (a: Approval) => a.kind === "payout" || a.kind === "transfer" || a.kind === "voucher";
 
 function ApprovalsScreen() {
-  const { t, tx, money, business: b, businessId } = useApp();
+  const { t, tx, money, business: b, businessId, resolveApproval } = useApp();
   const [details, setDetails] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
-  const { leaving, leave } = useLeaving();
+  const [cursor, setCursor] = useState<Record<string, number>>({});
+  const [stamp, setStamp] = useState<string | null>(null);
   const [approve, setApprove] = useState<ApproveTarget | null>(null);
   const [reject, setReject] = useState<RejectTarget | null>(null);
-
-  const match = (a: Approval) => filter === "all" || (filter === "money" ? isMoney(a) : a.kind === filter);
-  const list = b.approvals.filter(match);
-  const count = (f: Filter) => b.approvals.filter((a) => f === "all" || (f === "money" ? isMoney(a) : a.kind === f)).length;
-
-  return (
-    <div className="illustrated-screen px-5 pt-6 pb-8">
-      <ScreenHeader titleKey="approvalsTitle" />
-
-      <Button variant="ghost" className="relative mt-4 h-auto w-full p-0 hover:bg-transparent" aria-label={t("reviewRequests")} onClick={()=>setDetails(true)}><img src={b.approvals.length?scene:allClearImg} alt="" className="aspect-square w-full object-contain" /><span className="absolute right-2 bottom-6 rounded-full border bg-card px-4 py-2 shadow-soft">{t("pending",{n:b.approvals.length})}</span></Button>
-      <StateSentence tone={b.approvals.length?"warn":"good"}>{b.approvals.length?t("approvalSentence",{n:b.approvals.length}):t("allClear")}</StateSentence>
-      <section><h2 className="text-sm font-semibold text-muted-foreground">{t("approvalsTitle")}</h2><p className="mt-2 text-[32px] font-extrabold">{t("pending",{n:b.approvals.length})}</p><Button className="mt-4 min-h-12 w-full" onClick={()=>setDetails(true)} disabled={!b.approvals.length}>{t("reviewRequests")}</Button></section>
-      <SeeDetails onClick={()=>setDetails(true)} />
-      <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("approvalsTitle")}>
-      <div className="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1">
-        {filters.map(([f, k]) => {
-          const n = count(f);
-          return (
-            <Button
-              key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
-              variant="outline" className={cn("min-h-12 shrink-0 rounded-full border px-3 text-xs font-semibold transition-colors", filter === f ? "border-primary bg-secondary text-foreground" : "bg-card text-muted-foreground")}
-            >
-              {t(k)}{n > 0 && <span className="ml-1 text-bad">· {n}</span>}
-            </Button>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {list.length === 0 && (
-          <div className="animate-screen-in flex flex-col items-center py-10 text-center">
-            <img src={allClearImg} alt="" width={180} height={180} loading="lazy" className="h-40 w-auto opacity-90" />
-            <p className="mt-4 font-semibold">{t("allClear")}</p>
-          </div>
-        )}
-        {list.map((a) => {
-          const key = `${businessId}:${a.id}`;
-          const pin = needsPin(a);
-          const title = tx(a.title);
-          const rows: [string, string][] = [[t("approvalsTitle"), tx(b.name)]];
-          if (a.amount) rows.unshift([t("totalAmount"), money(a.amount)]);
-          return (
-            <div key={a.id} className={cn("rounded-2xl border bg-card p-4 shadow-soft transition-all duration-300", leaving.has(key) && "translate-x-full opacity-0")}>
-              <div className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-                <span>{tx(b.name)}</span>
-                {pin && <span className="flex items-center gap-1 normal-case"><Lock className="size-3" /> {t("needsPin")}</span>}
-              </div>
-              <p className="mt-1.5 font-semibold leading-snug">{title}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{tx(a.detail)}</p>
-              <div className="mt-3 flex gap-2">
-                <Button onClick={() => {setDetails(false);setReject({ key, title })}} className="flex-1 min-h-11 rounded-xl bg-bad-soft py-2.5 text-sm font-semibold text-bad">{t("reject")}</Button>
-                <Button onClick={() => {setDetails(false);setApprove({ key, title, pin, rows })}} className="flex-1 min-h-11 rounded-xl bg-good py-2.5 text-sm font-semibold text-primary-foreground">{t("approve")}</Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      </DetailsSheet>
-
-      <ApproveSheet target={approve} onClose={() => {setApprove(null);setDetails(true)}} onApproved={(k) => { leave(k); toast.success(t("approvedToast")); }} />
-      <RejectSheet target={reject} onClose={() => {setReject(null);setDetails(true)}} onRejected={(k) => { setReject(null); setDetails(true); leave(k); toast(t("rejectedToast")); }} />
-    </div>
-  );
+  const index = Math.min(cursor[businessId] ?? 0, Math.max(0,b.approvals.length-1));
+  const current = b.approvals[index];
+  const list = b.approvals.filter(a => filter === "all" || (filter === "money" ? isMoney(a) : a.kind === filter));
+  const choose = (n:number) => setCursor(c=>({...c,[businessId]:n}));
+  const review = (a:Approval, yes:boolean) => {
+    const key = `${businessId}:${a.id}`, title=tx(a.title);
+    setDetails(false);
+    if (yes) setApprove({key,title,pin:needsPin(a),rows:[[t("approvalsTitle"),tx(b.name)],...(a.amount?[[t("totalAmount"),money(a.amount)] as [string,string]]:[])]});
+    else setReject({key,title});
+  };
+  const paper = (a:Approval, main=false) => <article key={`${businessId}:${a.id}`} className={cn("relative rounded-lg border bg-card p-5 shadow-soft",main&&"animate-paper-in")}>
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>{tx(b.name)}</span>{needsPin(a)&&<span className="flex items-center gap-1"><Lock className="size-4" />{t("needsPin")}</span>}</div>
+    <h2 className="mt-4 text-lg font-bold leading-relaxed">{tx(a.title)}</h2>
+    <p className="mt-2 text-sm text-muted-foreground">{tx(a.detail)}</p>
+    <p className="mt-5 text-xs font-semibold text-muted-foreground">{t(a.amount?"totalAmount":"amountNotApplicable")}</p>
+    {a.amount!==undefined&&<p className="mt-1 break-words text-[32px] font-extrabold">{money(a.amount)}</p>}
+    <div className="mt-5 grid grid-cols-2 gap-2"><Button onClick={()=>review(a,true)} className="min-h-12 bg-good text-primary-foreground">{t("approve")}</Button><Button onClick={()=>review(a,false)} className="min-h-12 bg-bad-soft text-bad">{t("reject")}</Button></div>
+    {stamp===`${businessId}:${a.id}`&&<div role="status" className="approval-stamp pointer-events-none absolute inset-0 grid place-items-center bg-card/85"><span className="rounded-lg border-4 border-good px-4 py-3 text-2xl font-extrabold text-good">{t("approvalStamp")}</span></div>}
+  </article>;
+  return <div className="illustrated-screen px-5 pt-6 pb-8">
+    <ScreenHeader titleKey="approvalsTitle" />
+    <Button variant="ghost" className="relative mt-4 h-auto w-full p-0 hover:bg-transparent" aria-label={t("seeAll")} onClick={()=>setDetails(true)}>
+      <img src={b.approvals.length?scene:allClearImg} alt="" width={360} height={360} className="aspect-square w-full object-contain" />
+      {b.approvals.length>0&&<svg viewBox="0 0 100 100" className="paper-tray absolute h-24 w-28" aria-hidden>{Array.from({length:b.approvals.length},(_,i)=><path key={i} d={`M10 ${66-i*4}L55 ${42-i*4}L92 ${57-i*4}L47 ${82-i*4}Z`} className="fill-card stroke-border" strokeWidth="1.5" />)}</svg>}
+      <span className={cn("absolute right-1 bottom-4 rounded-full px-4 py-2 font-bold",b.approvals.length?"bg-bad-soft text-bad":"bg-good-soft text-good")}>{t("waitingCount",{n:b.approvals.length})}</span>
+    </Button>
+    <StateSentence tone={current?"warn":"good"}>{current?t("approvalQueueSentence",{n:b.approvals.length,m:b.approvals.filter(isMoney).length}):t("allClear")}</StateSentence>
+    <section>{current&&paper(current,true)}</section>
+    {current&&<div className="mt-4 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-1"><Button size="icon" variant="ghost" className="size-12" disabled={index===0} aria-label={t("previousRequest")} onClick={()=>choose(index-1)}><ChevronLeft /></Button><span className="text-sm font-semibold">{t("paperPosition",{n:index+1,m:b.approvals.length})}</span><Button size="icon" variant="ghost" className="size-12" disabled={index>=b.approvals.length-1} aria-label={t("nextRequest")} onClick={()=>choose(index+1)}><ChevronRight /></Button></div><Button variant="link" onClick={()=>setDetails(true)}>{t("seeAll")}</Button></div>}
+    <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("approvalsTitle")}>
+      <div className="flex flex-wrap gap-2">{filters.map(([f,k])=><Button key={f} variant="outline" aria-pressed={f===filter} onClick={()=>setFilter(f)} className={cn("rounded-full",f===filter&&"bg-primary text-primary-foreground")}>{t(k)}</Button>)}</div>
+      <div className="mt-5 space-y-4">{list.map(a=>paper(a))}{!list.length&&<p className="py-6 text-center">{t("allClear")}</p>}</div>
+    </DetailsSheet>
+    <ApproveSheet target={approve} onClose={()=>setApprove(null)} onApproved={key=>{setApprove(null);setStamp(key);setTimeout(()=>{resolveApproval(key);setStamp(null)},850);toast.success(t("approvedToast"))}} />
+    <RejectSheet target={reject} onClose={()=>setReject(null)} onRejected={key=>{setReject(null);resolveApproval(key);toast(t("rejectedToast"))}} />
+  </div>;
 }

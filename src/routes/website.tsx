@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Sheet, SheetDescription, SheetTitle } from "@/components/Sheets";
 import { DetailsSheet, SeeDetails, StateSentence } from "@/components/IllustratedScreen";
 import { Button } from "@/components/ui/button";
-import scene from "@/assets/zones/website.webp";
+import scene from "@/assets/scenes/shop-front.png";
 import { cn } from "@/lib/utils";
 import tote from "@/assets/products/tote.webp";
 import saree from "@/assets/products/saree.webp";
@@ -39,6 +39,8 @@ type Edits = Record<string, { live?: boolean; price?: number; photo?: string }>;
 function WebsiteScreen() {
   const { t, tx, business: b, businessId, setSiteOnline } = useApp();
   const [details, setDetails] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [hiddenOnly, setHiddenOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [edits, setEdits] = useState<Edits>({});
   const [undo, setUndo] = useState<{ businessId: string; id: string; live: boolean } | null>(null);
@@ -56,7 +58,10 @@ function WebsiteScreen() {
     return { ...p, live: e.live ?? p.live, price: e.price ?? p.price, photo: e.photo ?? images[p.image] };
   };
   const q = query.trim().toLowerCase();
-  const list = (products[businessId] ?? []).map(view).filter((p) => !q || p.name.en.toLowerCase().includes(q) || p.name.bn.includes(q));
+  const allProducts = (products[businessId] ?? []).map(view);
+  const shownCount = allProducts.filter(p => p.live).length;
+  const hiddenCount = allProducts.length - shownCount;
+  const list = allProducts.filter((p) => !q || p.name.en.toLowerCase().includes(q) || p.name.bn.includes(q));
 
   const toggle = (p: ReturnType<typeof view>) => {
     const next = !p.live;
@@ -64,30 +69,22 @@ function WebsiteScreen() {
     setUndo({ businessId, id: p.id, live: p.live });
     toast(t(next ? "nowLive" : "nowHidden", { name: tx(p.name) }), {
       duration: 5000,
-      action: { label: t("undo"), onClick: () => patch(p.id, { live: !next }) },
+      action: { label: t("undo"), onClick: () => { setEdits(e => ({ ...e, [`${businessId}:${p.id}`]: { ...e[`${businessId}:${p.id}`], live: p.live } })); setUndo(null); } },
     });
   };
 
   return (
     <div className="illustrated-screen px-5 pt-6 pb-8">
-      <ScreenHeader titleKey="websiteTitle" />
-
-      <Button variant="ghost" className="relative mt-4 h-auto w-full p-0 hover:bg-transparent" onClick={()=>setManage(true)} aria-label={t("manage")}><img src={scene} alt="" className="aspect-square w-full object-contain" /><span className="absolute right-2 bottom-5 rounded-full border bg-card px-4 py-2 shadow-soft">{b.website.online?t("online"):t("offline")}</span></Button>
-      <StateSentence tone={b.website.online?"good":"bad"}>{t("websiteSentence",{name:tx(b.website.siteName),n:b.website.productsLive})}</StateSentence>
-      <section className="mt-5 flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-soft">
-        <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-muted"><Globe className="size-5" /></div>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold">{tx(b.website.siteName)}</p>
-          <p className="truncate text-xs text-muted-foreground">{b.website.domain}</p>
-          <StatusBadge tone={b.website.online ? "good" : "bad"} className="mt-1.5">{b.website.online ? t("online") : t("offline")}</StatusBadge>
-        </div>
-        <Button variant="outline" onClick={() => setManage(true)} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold">
-          <Settings2 className="size-4" /> {t("manage")}
-        </Button>
-      </section>
-
-      <section className="mt-7 border-b pb-7"><h2 className="text-sm font-semibold text-muted-foreground">{t("productsLive")}</h2><p className="mt-2 text-[32px] font-extrabold">{t("items",{n:b.website.productsLive})}</p><SeeDetails onClick={()=>setDetails(true)} /></section>
-      <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("websiteTitle")}>
+      <ScreenHeader titleKey="websiteTitle" action={<Button variant="ghost" size="icon" className="size-12 shrink-0" aria-label={t("search")} title={t("search")} onClick={()=>setSearchOpen(true)}><Search className="size-5" /></Button>} />
+      <div className="relative mt-4 aspect-square">
+        <img src={scene} alt="" width={1024} height={1024} className="size-full object-contain" />
+        <Button variant="outline" className={cn("shop-sign absolute text-sm font-extrabold shadow-soft",b.website.online?"bg-good-soft text-good":"bg-bad-soft text-bad")} aria-label={t("manage")} onClick={()=>setManage(true)}>{t(b.website.online?"shopOpen":"shopClosed")}</Button>
+      </div>
+      <StateSentence tone={b.website.online?"good":"bad"}>{t(b.website.online?"shopSentenceOpen":"shopSentenceClosed",{n:shownCount,m:hiddenCount})}</StateSentence>
+      <section className="border-b pb-5"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><h2 className="font-bold">{tx(b.website.siteName)}</h2><p className="break-all text-sm text-muted-foreground">{b.website.domain}</p></div><Button variant="outline" onClick={()=>setManage(true)}><Settings2 className="size-4" />{t("manage")}</Button></div></section>
+      <section className="mt-6"><h2 className="text-xl font-bold">{t("productsTitle")}</h2><div className="mt-4 space-y-5">{allProducts.filter(p=>p.live).map(p=><ProductCard key={`${businessId}:${p.id}`} p={p} onToggle={()=>toggle(p)} onPhoto={()=>setPhotoFor(p)} onPrice={price=>patch(p.id,{price})} />)}</div><SeeDetails onClick={()=>{setHiddenOnly(false);setDetails(true)}} /></section>
+      <section className="mt-6"><Button variant="outline" className="h-auto min-h-20 w-full justify-between text-lg font-bold" onClick={()=>{setHiddenOnly(true);setDetails(true)}}><span>{t("hiddenProductsCount",{n:hiddenCount})}</span><Tag /></Button></section>
+      <DetailsSheet open={details || searchOpen} onClose={()=>{setDetails(false);setSearchOpen(false)}} title={hiddenOnly && !searchOpen?t("hiddenProductsCount",{n:hiddenCount}):t("productsTitle")}>
       <label className="mt-4 flex items-center gap-2 rounded-xl border bg-card px-3 focus-within:border-primary">
         <Search className="size-4 text-muted-foreground" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="w-full bg-transparent py-3 text-sm outline-none" />
@@ -95,15 +92,15 @@ function WebsiteScreen() {
 
       {undo && undo.businessId === businessId && <Button variant="outline" className="mt-3 min-h-12 w-full" onClick={() => { patch(undo.id, { live: undo.live }); setUndo(null); }}>{t("undo")}</Button>}
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        {list.map((p) => <ProductCard key={`${businessId}:${p.id}`} p={p} onToggle={() => toggle(p)} onPhoto={() => {setDetails(false);setPhotoFor(p)}} onPrice={(price) => patch(p.id, { price })} />)}
+      <div className="mt-4 space-y-5">
+        {list.filter(p=>!hiddenOnly || searchOpen || !p.live).map((p) => <ProductCard key={`${businessId}:${p.id}`} p={p} onToggle={() => toggle(p)} onPhoto={() => {setDetails(false);setSearchOpen(false);setPhotoFor(p)}} onPrice={(price) => patch(p.id, { price })} />)}
       </div>
       {list.length === 0 && <p className="mt-4 rounded-2xl border bg-card p-4 text-sm text-muted-foreground">{t("noResults")}</p>}
 
       </DetailsSheet>
 
       <ManageSheet open={manage} online={b.website.online} onClose={() => setManage(false)} onChange={(v) => { setSiteOnline(businessId, v); setManage(false); toast.success(v ? t("online") : t("offline")); }} />
-      <PhotoSheet product={photoFor} onClose={() => {setPhotoFor(null);setDetails(true)}} onUse={(url) => { if (photoFor) patch(photoFor.id, { photo: url }); setPhotoFor(null); setDetails(true); }} />
+      <PhotoSheet product={photoFor} onClose={() => setPhotoFor(null)} onUse={(url) => { if (photoFor) patch(photoFor.id, { photo: url }); setPhotoFor(null); }} />
     </div>
   );
 }
@@ -121,13 +118,13 @@ function ProductCard({ p, onToggle, onPhoto, onPrice }: { p: Product & { photo: 
   };
 
   return (
-    <div className={cn("overflow-hidden rounded-2xl border bg-card shadow-soft transition-opacity", !p.live && "opacity-75")}>
+    <div className={cn("overflow-hidden rounded-2xl border bg-card shadow-soft transition-opacity", !p.live && "border-muted-foreground")}>
       <Button onClick={onPhoto} variant="ghost" className="relative block h-auto aspect-square w-full bg-muted p-0" aria-label={t("photoTitle")}>
         <img src={p.photo} alt={tx(p.name)} width={360} height={360} loading="lazy" className="size-full object-cover" />
         <span className="absolute right-2 bottom-2 grid size-7 place-items-center rounded-full bg-card/90"><Camera className="size-3.5" /></span>
       </Button>
       <div className="p-3">
-        <p className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">{tx(p.name)}</p>
+        <p className="line-clamp-2 min-h-[2.5em] text-lg leading-snug font-bold">{tx(p.name)}</p>
         {editing ? (
           <div className="mt-2">
             <div className="flex items-center gap-1 rounded-lg border px-2 focus-within:border-primary">
@@ -140,19 +137,19 @@ function ProductCard({ p, onToggle, onPhoto, onPrice }: { p: Product & { photo: 
             </div>
           </div>
         ) : (
-          <Button onClick={() => { setDraft(String(p.price)); setEditing(true); }} aria-label={t("editPrice")} variant="ghost" className="mt-1 h-auto min-h-12 min-w-12 p-0 text-left text-lg font-extrabold tracking-tight underline decoration-border decoration-dashed underline-offset-4">
+          <Button onClick={() => { setDraft(String(p.price)); setEditing(true); }} aria-label={t("editPrice")} variant="ghost" className="mt-1 h-auto min-h-12 min-w-12 p-0 rounded-lg bg-gold-light px-4 text-left text-[32px] font-extrabold text-foreground">
             {money(p.price)}
           </Button>
         )}
         {p.deal && (
-          <p className="mt-1.5 flex gap-1 rounded-lg bg-warn-soft p-1.5 text-[10.5px] leading-snug font-medium text-warn">
+          <p className="mt-1.5 flex gap-1 rounded-lg bg-warn-soft p-1.5 text-sm leading-snug font-medium text-warn">
             <Tag className="mt-px size-3 shrink-0" /> {t("dealLive", { p: `৳ ${num(p.deal)}` })}
           </p>
         )}
         <Button onClick={onToggle} role="switch" aria-checked={p.live} variant="ghost" className="mt-1 h-auto flex min-h-12 w-full items-center justify-between">
-          <span className={cn("text-xs font-semibold", p.live ? "text-good" : "text-muted-foreground")}>{p.live ? t("live") : t("hidden")}</span>
-          <span className={cn("relative h-6 w-10 rounded-full transition-colors", p.live ? "bg-good" : "bg-border")}>
-            <span className={cn("absolute top-0.5 size-5 rounded-full bg-card shadow transition-all", p.live ? "left-[18px]" : "left-0.5")} />
+          <span className={cn("text-xs font-semibold", p.live ? "text-good" : "text-muted-foreground")}>{p.live ? t("onShow") : t("hidden")}</span>
+          <span className={cn("relative h-9 w-12 rounded-md border-2 transition-colors", p.live ? "bg-good" : "bg-border")}>
+            <span className={cn("absolute left-1 right-1 h-4 rounded-sm bg-card shadow transition-all", p.live ? "top-0.5" : "top-[15px]")} />
           </span>
         </Button>
       </div>

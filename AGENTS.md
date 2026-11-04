@@ -16,3 +16,5 @@
 
 - Inner screens use shared illustrated overview and detail-sheet primitives; keep action state in the route body so opening details does not reset edits.
 - Render funded jars and adjustable coin stacks as data-driven SVG over scene artwork so funding levels and what-if shares reflect the selected project.
+- Keep dashboard previous-month values in the shared data shape and mock source; render each currency per business to prevent mixed-currency aggregation.
+- Keep approval queue position and product edits in route state; scene labels and paper stacks are data overlays, so switching businesses updates them immediately.

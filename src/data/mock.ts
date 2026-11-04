@@ -207,10 +207,10 @@ export const products: Record<string, Product[]> = {
 
 // ---------- Dashboard ----------
 export const dashboard: Record<string, DashboardStats> = {
-  b1: { currency: "BDT", moneyIn: 1840000, profitPaid: 182500, payoutsDue: 372000, sales: 2650000, profitByMonth: [92000, 104000, 98000, 121000, 133000, 118000, 142000, 150000, 139000, 161000, 174000, 182500] },
-  b2: { currency: "BDT", moneyIn: 760000, profitPaid: 96000, payoutsDue: 0, sales: 1120000, profitByMonth: [41000, 46000, 52000, 49000, 58000, 63000, 61000, 70000, 76000, 81000, 88000, 96000] },
-  b3: { currency: "BDT", moneyIn: 290000, profitPaid: 31000, payoutsDue: 120000, sales: 410000, profitByMonth: [22000, 18000, 25000, 27000, 21000, 30000, 28000, 26000, 33000, 29000, 35000, 31000] },
-  b4: { currency: "USD", moneyIn: 14200, profitPaid: 3100, payoutsDue: 0, sales: 21800, profitByMonth: [1400, 1650, 1500, 1900, 2100, 2000, 2350, 2500, 2400, 2750, 2900, 3100] },
+  b1: { currency: "BDT", moneyIn: 1840000, profitPaid: 182500, payoutsDue: 372000, sales: 2650000, previousMonth: { moneyIn: 1642857, profitPaid: 174000, payoutsDue: 410000, sales: 2453704 }, profitByMonth: [92000, 104000, 98000, 121000, 133000, 118000, 142000, 150000, 139000, 161000, 174000, 182500] },
+  b2: { currency: "BDT", moneyIn: 760000, profitPaid: 96000, payoutsDue: 0, sales: 1120000, previousMonth: { moneyIn: 703704, profitPaid: 88000, payoutsDue: 0, sales: 1037037 }, profitByMonth: [41000, 46000, 52000, 49000, 58000, 63000, 61000, 70000, 76000, 81000, 88000, 96000] },
+  b3: { currency: "BDT", moneyIn: 290000, profitPaid: 31000, payoutsDue: 120000, sales: 410000, previousMonth: { moneyIn: 322222, profitPaid: 35000, payoutsDue: 100000, sales: 465909 }, profitByMonth: [22000, 18000, 25000, 27000, 21000, 30000, 28000, 26000, 33000, 29000, 35000, 31000] },
+  b4: { currency: "USD", moneyIn: 14200, profitPaid: 3100, payoutsDue: 0, sales: 21800, previousMonth: { moneyIn: 12679, profitPaid: 2900, payoutsDue: 0, sales: 19464 }, profitByMonth: [1400, 1650, 1500, 1900, 2100, 2000, 2350, 2500, 2400, 2750, 2900, 3100] },
 };
 
 export const attention: AttentionItem[] = [
