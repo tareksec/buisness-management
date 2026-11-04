@@ -1,228 +1,96 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
 import { Drawer } from "vaul";
-import { ArrowLeft, CheckCircle2, Delete, Info, Minus, Plus, RotateCcw } from "lucide-react";
-import { vault, type PayoutBatch, type ProjectStatus, type Split } from "@/data/mock";
+import { CheckCircle2, Delete, Minus, Plus, RotateCcw } from "lucide-react";
+import { vault } from "@/data/mock";
+import type { PayoutBatch, Split } from "@/types";
 import { useApp } from "@/lib/app-state";
 import { adjustSplit, splitAmounts } from "@/lib/split";
-import { BusinessPills } from "@/components/BusinessPills";
-import { PreviewFooter } from "@/components/PreviewFooter";
-import { StatusBadge, type Tone } from "@/components/StatusBadge";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { StatusBadge } from "@/components/StatusBadge";
+import { DetailsSheet, SeeDetails, StateSentence, FundedJar, CoinStack } from "@/components/IllustratedScreen";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import room from "@/assets/scenes/vault-room.png";
+import coins from "@/assets/scenes/coin-stack.png";
 
 export const Route = createFileRoute("/vault")({
-  head: () => ({
-    meta: [
-      { title: "Investment Vault · Business Command" },
-      { name: "description", content: "Projects, profit split what-ifs and payouts waiting for approval." },
-      { property: "og:title", content: "Investment Vault · Business Command" },
-      { property: "og:description", content: "Projects, profit split what-ifs and payouts waiting for approval." },
-    ],
-  }),
-  component: VaultScreen,
+  head: () => ({ meta: [
+    { title: "Investment Vault · Business Command" },
+    { name: "description", content: "Your projects, profit shares and payouts in an illustrated investment vault." },
+    { property: "og:title", content: "Investment Vault · Business Command" },
+    { property: "og:description", content: "Your projects, profit shares and payouts in an illustrated investment vault." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+  ] }), component: VaultScreen,
 });
 
-const statusTone: Record<ProjectStatus, Tone> = { raising: "warn", running: "good", settled: "neutral" };
-
 function VaultScreen() {
-  const { t, tx, num, money, businessId } = useApp();
-  const data = vault[businessId]!;
-  const [selected, setSelected] = useState(0);
-  const project = data.projects[selected] ?? data.projects[0]!;
-  const [split, setSplit] = useState<Split>(project.contract);
+  const { businessId } = useApp();
+  const data = vault[businessId];
+  if (!data || !data.projects[0]) return null;
+  return <VaultBody key={businessId} data={data} />;
+}
+function VaultBody({ data }: { data: (typeof vault)[string] }) {
+  const { t, tx, money, num } = useApp();
+  const [selected, setSelected] = useState(data.projects[0]?.id);
+  const project = data.projects.find(p => p.id === selected) ?? data.projects[0];
+  const [split, setSplit] = useState<Split>(project?.contract ?? { investors: 0, partner: 0, company: 100 });
   const [tryProfit, setTryProfit] = useState("");
+  const [details, setDetails] = useState(false);
+  const [payouts, setPayouts] = useState(false);
   const [approved, setApproved] = useState<Record<string, boolean>>({});
   const [reviewing, setReviewing] = useState<PayoutBatch | null>(null);
-  const scroller = useRef<HTMLDivElement>(null);
-
-  // New business: back to first project
-  useEffect(() => {
-    setSelected(0);
-    scroller.current?.scrollTo({ left: 0 });
-  }, [businessId]);
-  // New project: restore its contract split
-  useEffect(() => setSplit(project.contract), [project]);
-
-  const onScroll = () => {
-    const el = scroller.current;
-    if (!el) return;
-    const i = Math.round(el.scrollLeft / (el.firstElementChild as HTMLElement).offsetWidth);
-    if (i !== selected && data.projects[i]) setSelected(i);
-  };
-
-  const parsed = Number(tryProfit.replace(/[^0-9]/g, ""));
-  const profit = tryProfit.trim() && parsed > 0 ? parsed : project.profit;
+  useEffect(() => { if (project) { setSplit(project.contract); setTryProfit(""); } }, [project]);
+  if (!project) return null;
+  const parsed = Number(tryProfit);
+  const profit = parsed > 0 ? parsed : project.profit;
   const amounts = splitAmounts(split, profit);
-  const maxInv = 100 - split.partner;
-  const isContract = split.investors === project.contract.investors;
+  const waiting = data.payouts.filter(p => !approved[p.id]);
+  const total = waiting.reduce((sum,p) => sum + p.total, 0);
+  const active = data.projects.filter(p => p.status !== "settled");
   const step = (d: number) => setSplit(adjustSplit(project.contract, split.investors + d));
-
-  return (
-    <div className="px-5 pt-6">
-      <header className="flex items-center gap-3">
-        <Link to="/" aria-label={t("back")} className="grid size-11 place-items-center rounded-full border bg-card shadow-soft">
-          <ArrowLeft className="size-5" />
-        </Link>
-        <h1 className="text-2xl font-extrabold tracking-tight">{t("vaultTitle")}</h1>
-      </header>
-
-      <BusinessPills className="mt-5" />
-
-      {/* Project cards */}
-      <div ref={scroller} onScroll={onScroll} className="no-scrollbar -mx-5 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2">
-        {data.projects.map((p, i) => {
-          const pct = Math.round((p.raised / p.goal) * 100);
-          return (
-            <button
-              key={p.id}
-              onClick={() => { setSelected(i); (scroller.current?.children[i] as HTMLElement)?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" }); }}
-              className={cn(
-                "w-[85%] shrink-0 snap-start rounded-2xl border bg-card p-4 text-left shadow-soft transition-colors",
-                i === selected && "border-primary",
-              )}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold">{tx(p.name)} <span className="text-muted-foreground">· {p.code}</span></p>
-                <StatusBadge tone={statusTone[p.status]}>{t(p.status)}</StatusBadge>
-              </div>
-              <dl className="mt-3 space-y-2 text-sm">
-                <Row label={t("goal")} value={money(p.goal)} />
-                <Row label={t("raised")} value={`${money(p.raised)} · ${num(pct)}%`} />
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
-                </div>
-                <Row label={t("needed")} value={money(Math.max(0, p.goal - p.raised))} />
-              </dl>
-              <div className="mt-4 rounded-xl bg-good-soft p-3">
-                <p className="text-xs font-medium text-good">{t("currentProfit")}</p>
-                <p className="text-2xl font-extrabold tracking-tight">{money(p.profit)}</p>
-              </div>
-            </button>
-          );
-        })}
+  return <div className="illustrated-screen px-5 pt-6 pb-8">
+    <ScreenHeader titleKey="vaultTitle" />
+    <div className="relative -mx-3 mt-4 aspect-square">
+      <img src={room} alt="" className="size-full object-contain" />
+      <div className="absolute inset-x-[15%] top-[42%] flex justify-between gap-3">
+        {active.map(p => <Button key={p.id} variant="ghost" aria-pressed={project.id === p.id} onClick={() => setSelected(p.id)} className="project-jar flex h-auto min-w-0 flex-1 flex-col gap-0 p-0 hover:bg-transparent">
+          <span className="rounded-full border bg-card px-2 py-1 text-[11px] shadow-soft">{t("funded", { n: Math.round(p.raised/p.goal*100) })}</span>
+          <span className="h-28 w-24"><FundedJar percent={p.raised/p.goal*100} /></span>
+          <span className="rounded-lg border bg-card px-2 py-1 text-xs font-bold shadow-soft">{tx(p.name)}</span>
+        </Button>)}
       </div>
-      <div className="mt-2 flex justify-center gap-1.5" aria-hidden>
-        {data.projects.map((p, i) => (
-          <span key={p.id} className={cn("h-1.5 rounded-full transition-all", i === selected ? "w-5 bg-primary" : "w-1.5 bg-border")} />
-        ))}
-      </div>
-
-      {/* Profit split */}
-      <section className="mt-6 rounded-2xl border bg-card p-4 shadow-soft">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="font-bold">{t("profitSplit")}</h2>
-          <span className="text-xs text-muted-foreground">{tx(project.name)}</span>
-        </div>
-        <p className="mt-3 flex items-start gap-2 rounded-xl bg-warn-soft p-3 text-xs font-medium text-warn">
-          <Info className="mt-px size-4 shrink-0" /> {t("whatIf")}
-        </p>
-
-        <div className="mt-4 flex items-center gap-3">
-          <button onClick={() => step(-1)} aria-label={t("decrease")} disabled={split.investors <= 0} className="grid size-11 shrink-0 place-items-center rounded-full border disabled:opacity-40">
-            <Minus className="size-4" />
-          </button>
-          <input
-            type="range" min={0} max={maxInv} step={1} value={split.investors}
-            onChange={(e) => setSplit(adjustSplit(project.contract, Number(e.target.value)))}
-            aria-label={t("investors")}
-            className="h-2 flex-1 cursor-pointer accent-primary"
-          />
-          <button onClick={() => step(1)} aria-label={t("increase")} disabled={split.investors >= maxInv} className="grid size-11 shrink-0 place-items-center rounded-full border disabled:opacity-40">
-            <Plus className="size-4" />
-          </button>
-        </div>
-
-        <div className="mt-3 flex h-3 overflow-hidden rounded-full" aria-hidden>
-          <div className="bg-primary transition-all" style={{ width: `${split.investors}%` }} />
-          <div className="bg-warn transition-all" style={{ width: `${split.partner}%` }} />
-          <div className="bg-muted-foreground/40 transition-all" style={{ width: `${split.company}%` }} />
-        </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <Share label={t("investors")} pct={num(split.investors)} amt={money(amounts.investors)} dot="bg-primary" />
-          <Share label={t("partner")} pct={num(split.partner)} amt={money(amounts.partner)} dot="bg-warn" />
-          <Share label={t("company")} pct={num(split.company)} amt={money(amounts.company)} dot="bg-muted-foreground/40" />
-        </div>
-
-        <div className="mt-3 flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
-            {t("contractLabel", { a: project.contract.investors, b: project.contract.partner, c: project.contract.company })}
-          </span>
-          <button onClick={() => setSplit(project.contract)} disabled={isContract} className="inline-flex min-h-11 shrink-0 items-center gap-1 font-semibold underline-offset-2 hover:underline disabled:opacity-40">
-            <RotateCcw className="size-3" /> {t("resetContract")}
-          </button>
-        </div>
-      </section>
-
-      {/* Quick estimate */}
-      <section className="mt-4 rounded-2xl border bg-card p-4 shadow-soft">
-        <h2 className="font-bold">{t("quickEstimate")}</h2>
-        <label className="mt-3 block text-xs font-medium text-muted-foreground" htmlFor="try-profit">{t("tryProfit")}</label>
-        <div className="mt-1 flex items-center gap-2 rounded-xl border bg-background px-3 focus-within:border-primary">
-          <span className="font-semibold">৳</span>
-          <input
-            id="try-profit" inputMode="numeric" value={tryProfit}
-            onChange={(e) => setTryProfit(e.target.value.replace(/[^0-9০-৯]/g, "").replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))))}
-            placeholder={num(project.profit)}
-            className="w-full bg-transparent py-3 text-lg font-semibold outline-none"
-          />
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">{t("tryHint")}</p>
-      </section>
-
-      {/* Payouts */}
-      <section className="mt-6">
-        <h2 className="font-bold">{t("payoutsWaiting")}</h2>
-        <div className="mt-3 space-y-2">
-          {data.payouts.length === 0 && <p className="rounded-2xl border bg-card p-4 text-sm text-muted-foreground">{t("noPayouts")}</p>}
-          {data.payouts.map((pb) => (
-            <div key={pb.id} className="rounded-2xl border bg-card p-4 shadow-soft">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold">{t("batch")} {pb.batch}</p>
-                  <p className="text-xs text-muted-foreground">{t("investorCount", { n: pb.investors })} · {t("preparedBy", { name: tx(pb.preparedBy) })}</p>
-                </div>
-                <StatusBadge tone={approved[pb.id] ? "good" : "warn"}>{approved[pb.id] ? t("approved") : t("waiting")}</StatusBadge>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <p className="text-xl font-extrabold tracking-tight">{money(pb.total)}</p>
-                {!approved[pb.id] && (
-                  <button onClick={() => setReviewing(pb)} className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
-                    {t("reviewApprove")}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <PreviewFooter />
-
-      <ApproveSheet
-        batch={reviewing}
-        onClose={() => setReviewing(null)}
-        onApproved={(id) => setApproved((a) => ({ ...a, [id]: true }))}
-      />
     </div>
-  );
+    <StateSentence tone={project.status === "raising" ? "warn" : "good"}>{t("vaultSentence", { name: tx(project.name), raised: money(project.raised), needed: money(Math.max(0, project.goal-project.raised)) })}</StateSentence>
+    <section className="flex items-center justify-between gap-3 border-b pb-7">
+      <div className="min-w-0"><h2 className="text-sm font-semibold text-muted-foreground">{t("profitSoFar")}</h2><p className="mt-2 text-[32px] leading-tight font-extrabold break-words">{money(profit)}</p></div>
+      <img src={coins} alt="" className="size-20 shrink-0 object-contain" />
+    </section>
+    <section className="mt-7 border-b pb-7">
+      <h2 className="text-xl font-bold">{t("whoGetsWhat")}</h2>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {([['investors',split.investors,amounts.investors],['partner',split.partner,amounts.partner],['company',split.company,amounts.company]] as const).map(([label,pct,amt]) => <div key={label} className="min-w-0 text-center"><CoinStack share={pct} /><p className="min-h-10 text-xs font-semibold">{t(label)}</p><p className="text-[13px] font-bold break-words">{money(amt)}</p><p className="mt-1 text-xs text-muted-foreground">{t("profitShare", {n:pct})}</p></div>)}
+      </div>
+      <div className="mt-4 flex items-center gap-3"><Button variant="outline" size="icon" className="size-12 shrink-0 rounded-full" aria-label={t("decrease")} disabled={split.investors<=0} onClick={()=>step(-1)}><Minus /></Button><input type="range" className="min-w-0 flex-1 accent-primary" aria-label={t("investors")} min={0} max={100-split.partner} value={split.investors} onChange={e=>setSplit(adjustSplit(project.contract,Number(e.target.value)))} /><Button variant="outline" size="icon" className="size-12 shrink-0 rounded-full" aria-label={t("increase")} disabled={split.investors>=100-split.partner} onClick={()=>step(1)}><Plus /></Button></div>
+      <p className="mt-3 text-sm text-warn">{t("whatIf")}</p><Button variant="link" className="mt-2 h-auto p-0" onClick={()=>setSplit(project.contract)} disabled={split.investors===project.contract.investors}><RotateCcw />{t("resetContract")}</Button>
+    </section>
+    <section className="mt-7"><h2 className="text-sm font-semibold text-muted-foreground">{t("payoutsWaiting")}</h2><div className="mt-3 rounded-2xl border bg-card p-5"><p className="text-lg font-semibold">{waiting.length ? t("payoutSummary",{n:waiting.length}):t("noPayouts")}</p><p className="mt-2 text-[32px] font-extrabold">{money(total)}</p><Button className="mt-4 min-h-12 w-full rounded-xl" onClick={()=>setPayouts(true)} disabled={!waiting.length}>{t("review")}</Button></div></section>
+    <SeeDetails onClick={()=>setDetails(true)} />
+    <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("vaultTitle")}>
+      <label htmlFor="try-profit" className="text-sm font-semibold">{t("tryProfit")}</label><input id="try-profit" className="mt-2 w-full rounded-xl border p-3" inputMode="numeric" value={tryProfit} placeholder={num(project.profit)} onChange={e=>setTryProfit(e.target.value.replace(/[০-৯]/g,d=>String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/\D/g,""))} /><p className="mt-2 text-xs text-muted-foreground">{t("tryHint")}</p>
+      {data.projects.map(p=><div key={p.id} className="mt-5 rounded-xl border p-4"><Button variant="ghost" className="h-auto w-full justify-between p-0" onClick={()=>{setSelected(p.id);setDetails(false)}}>{tx(p.name)}<StatusBadge tone={p.status==='running'?'good':p.status==='raising'?'warn':'neutral'}>{t(p.status)}</StatusBadge></Button><dl className="mt-3 space-y-2 text-sm"><Row label={t("projectCode")} value={p.code} /><Row label={t("goal")} value={money(p.goal)} /><Row label={t("raised")} value={money(p.raised)} /><Row label={t("needed")} value={money(Math.max(0,p.goal-p.raised))} /></dl></div>)}
+    </DetailsSheet>
+    <DetailsSheet open={payouts} onClose={()=>setPayouts(false)} title={t("payoutsWaiting")}>
+      {waiting.length ? waiting.map(pb=><div key={pb.id} className="mb-3 rounded-xl border p-4"><p className="font-bold">{t("batch")} {pb.batch}</p><p className="mt-1 text-sm text-muted-foreground">{t("investorCount",{n:pb.investors})} · {t("preparedBy",{name:tx(pb.preparedBy)})}</p><p className="mt-3 text-3xl font-bold">{money(pb.total)}</p><Button className="mt-4 min-h-12 w-full" onClick={()=>{setPayouts(false);setReviewing(pb)}}>{t("reviewApprove")}</Button></div>):<p>{t("noPayouts")}</p>}
+    </DetailsSheet>
+    <ApproveSheet batch={reviewing} onClose={()=>setReviewing(null)} onApproved={id=>setApproved(a=>({...a,[id]:true}))} />
+  </div>;
 }
-
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-2">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="font-semibold">{value}</dd>
-    </div>
-  );
-}
-
-function Share({ label, pct, amt, dot }: { label: string; pct: string; amt: string; dot: string }) {
-  return (
-    <div className="rounded-xl bg-muted p-2.5">
-      <p className="flex items-center gap-1 text-[11px] text-muted-foreground"><span className={cn("size-2 rounded-full", dot)} />{label}</p>
-      <p className="mt-0.5 text-lg font-bold">{pct}%</p>
-      <p className="text-xs font-semibold">{amt}</p>
     </div>
   );
 }
