@@ -57,7 +57,7 @@ export function CoinStack({ share }: { share: number }) {
 export function FundedJar({ percent }: { percent: number }) {
   const level = Math.max(0, Math.min(100, percent));
   const top = 108 - level * .67;
-  return <svg viewBox="0 0 100 135" className="h-full w-full" aria-hidden>
+  return <svg viewBox="0 0 100 135" className="!h-full !w-full" aria-hidden>
     <path d="M22 30Q50 14 78 30L84 103Q85 125 50 126Q15 125 16 103Z" className="fill-jar-glass stroke-jar-edge" strokeWidth="2" />
     <path d={`M20 ${top}Q50 ${top + 18} 80 ${top}L80 104Q80 121 50 121Q20 121 20 104Z`} className="fill-gold-deep" />
     <ellipse cx="50" cy={top} rx="30" ry="11" className="fill-gold stroke-gold-edge" />
