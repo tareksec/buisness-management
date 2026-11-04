@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, ChevronRight, Coins, HandCoins, ShoppingBag, Wallet } from "lucide-react";
 import { attention, dashboard } from "@/data/mock";
-import type { Currency, DashboardStats } from "@/types";
+import type { Currency, DashboardMetric } from "@/types";
 import { useApp, toLangDigits, type TKey } from "@/lib/app-state";
 import { DetailsSheet, SeeDetails, StateSentence } from "@/components/IllustratedScreen";
 import { Button } from "@/components/ui/button";
-import scene from "@/assets/zones/investment.webp";
+import scene from "@/assets/scenes/business-map.png";
+import moneyPicture from "@/assets/scenes/coin-stack.png";
+import shopPicture from "@/assets/scenes/shop-front.png";
+import deskPicture from "@/assets/zones/approvals.webp";
+import vaultPicture from "@/assets/zones/investment.webp";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard")({
@@ -24,7 +28,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const ALL = "all";
-const METRICS: [keyof Omit<DashboardStats, "currency" | "profitByMonth">, TKey][] = [
+const METRICS: [DashboardMetric, TKey][] = [
   ["moneyIn", "moneyIn"],
   ["profitPaid", "profitPaid"],
   ["payoutsDue", "payoutsDue"],
@@ -68,12 +72,16 @@ function Dashboard() {
         ))}
       </div>
 
-      <Button variant="ghost" className="relative mt-4 h-auto w-full p-0 hover:bg-transparent" aria-label={t("seeDetails")} onClick={()=>setDetails(true)}><img src={scene} alt="" className="aspect-square w-full object-contain" /><span className="absolute right-2 bottom-5 rounded-full border bg-card px-4 py-2 shadow-soft">{all?t("allBusinesses"):tx(businesses.find(b=>b.id===businessId)?.name ?? {en:"",bn:""})}</span></Button>
-      <StateSentence tone={items.length?"warn":"good"}>{all?t("businessOverview",{n:businesses.length}):t("monthOverview")}</StateSentence>
-      <section className="border-b pb-7"><h2 className="text-sm font-semibold text-muted-foreground">{t("moneyIn")}</h2>{all?businesses.map(b=>{const d=dashboard[b.id];return d?<div key={b.id} className="mt-4"><p className="text-sm font-semibold">{tx(b.name)}</p><p className="mt-1 text-[32px] font-extrabold break-words">{fmt(d.moneyIn,d.currency)}</p></div>:null}):<p className="mt-2 text-[32px] font-extrabold">{fmt(stats.moneyIn,stats.currency)}</p>}</section>
-      <section className="mt-7"><h2 className="text-xl font-bold">{t("needsAttention")}</h2><p className="mt-3 text-lg">{items.length?t("pending",{n:items.length}):t("nothingAttention")}</p></section>
+      <div className="business-map relative mt-4 aspect-square"><img src={scene} alt="" width={1024} height={1024} className="size-full object-contain" />{businesses.map((b,i)=>{const tone=!b.website.online?"bad":b.supply.lowStock||b.approvals.length?"warn":"good";return <Button key={b.id} variant="outline" aria-pressed={!all&&businessId===b.id} onClick={()=>{setBusinessId(b.id);setAll(false)}} className={cn("map-business absolute h-auto min-h-12 flex-col gap-0 rounded-lg px-2 py-1 text-xs shadow-soft",`map-business-${i}`,!all&&businessId===b.id&&"border-primary")}><span className="font-bold">{tx(b.name)}</span><span className={cn("flex items-center gap-1",tone==="good"?"text-good":tone==="bad"?"text-bad":"text-warn")}><span className="size-2 rounded-full bg-current" />{t(tone==="good"?"healthy":tone==="bad"?"attention":"healthWatch")}</span></Button>})}</div>
+      <StateSentence tone={items.length?"warn":"good"}>{t("dashboardSentence",{trend:t(stats.moneyIn>stats.previousMonth.moneyIn?"trendUp":stats.moneyIn<stats.previousMonth.moneyIn?"trendDown":"trendSame"),n:new Set(items.map(a=>a.businessId)).size})}</StateSentence>
+      <section className="grid grid-cols-1 gap-4">{METRICS.map(([key,label],i)=>{
+        const picture=[moneyPicture,vaultPicture,deskPicture,shopPicture][i];
+        return <div key={key} className="relative overflow-hidden rounded-lg border bg-card p-4 shadow-soft"><img src={picture} alt="" width={1024} height={1024} loading="lazy" className="float-right h-20 w-20 object-contain" /><h2 className="min-h-10 text-sm font-bold">{t(label)}</h2>{(all?businesses:businesses.filter(b=>b.id===businessId)).map(b=>{const d=dashboard[b.id];if(!d)return null;const previous=d.previousMonth[key];const change=previous?Math.round((d[key]-previous)/previous*100):0;return <div key={b.id} className="clear-both mt-3 border-t pt-3">{all&&<p className="text-sm font-semibold text-muted-foreground">{tx(b.name)}</p>}<p className="break-words text-[32px] font-extrabold">{fmt(d[key],d.currency)}</p><p className={cn("mt-1 flex items-center gap-1 text-sm",change<0?"text-bad":change>0?"text-good":"text-muted-foreground")}>{change!==0&&(change>0?<ArrowUp className="size-4 shrink-0" />:<ArrowDown className="size-4 shrink-0" />)}{t(change>0?"upMonth":change<0?"downMonth":"sameMonth",{n:Math.abs(change)})}</p></div>})}</div>;
+      })}</section>
+      <section className="mt-7"><h2 className="text-xl font-bold">{t("needsAttention")}</h2><div className="mt-4 space-y-3">{items.slice(0,3).map(a=><Button key={a.id} asChild variant="outline" className="h-auto min-h-20 w-full justify-between p-4"><Link to={a.to} onClick={()=>setBusinessId(a.businessId)}><span className="flex min-w-0 items-start gap-2"><span className={cn("mt-1 size-3 shrink-0 rounded-full",a.tone==="bad"?"bg-bad":"bg-warn")} /><span className="min-w-0 text-left"><span className="block font-bold">{tx(a.text)}</span>{all&&<span className="block text-xs text-muted-foreground">{nameOf(a.businessId)}</span>}</span></span><ChevronRight className="shrink-0" /></Link></Button>)}{!items.length&&<p>{t("nothingAttention")}</p>}</div></section>
       <SeeDetails onClick={()=>setDetails(true)} />
       <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("dashboard")}>
+      {all && businesses.map(b=>{const d=dashboard[b.id];return d?<div key={b.id}><h2 className="mt-5 font-bold">{tx(b.name)}</h2><ProfitChart data={d.profitByMonth} currency={d.currency} /></div>:null})}
       {all ? (
         <section className="mt-5 space-y-3">
           <p className="text-xs text-muted-foreground">{t("perBusiness")}</p>
