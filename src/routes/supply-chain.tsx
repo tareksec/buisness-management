@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import road from "@/assets/scenes/supply-road.png";
 import stockImage from "@/assets/zones/supply.webp";
+import shipImage from "@/assets/scenes/import-ship.png";
 export const Route = createFileRoute("/supply-chain")({ head: () => ({ meta: [
   { title: "Supply Chain · Business Command" }, { name: "description", content: "Your stock, deliveries and dispatch requests on an illustrated supply road." },
   { property: "og:title", content: "Supply Chain · Business Command" }, { property: "og:description", content: "Your stock, deliveries and dispatch requests on an illustrated supply road." },
@@ -45,7 +46,7 @@ function SupplyBody() {
     </div>
     <StateSentence tone={data.low.length || dispatches.length ? 'warn':'good'}>{data.low.length || dispatches.length ? t('supplySentence',{n:data.low.length,m:dispatches.length}):t('sumAllGood')}</StateSentence>
     <section className="border-b pb-7"><h2 className="text-sm font-semibold text-muted-foreground">{t('dispatchTitle')}</h2><div className="mt-3 rounded-2xl border bg-card p-5"><p className="text-[32px] leading-tight font-extrabold">{t('ordersWaiting',{n:dispatches.length})}</p><Button className="mt-4 min-h-12 w-full rounded-xl" disabled={!dispatches.length} onClick={()=>setDispatchOpen(true)}>{t('review')}</Button></div></section>
-    <section className="mt-7"><h2 className="text-xl font-bold">{t('shipsAbroad')}</h2><Button variant="ghost" className="mt-3 h-auto w-full justify-start gap-4 p-0 text-left" onClick={()=>setGroup('imports')}><span className="grid size-20 shrink-0 place-items-center rounded-2xl bg-good-soft text-good"><Ship className="!size-12" /></span><span className="text-lg font-semibold">{data.imports.length ? t('containerArrival',{n:data.imports.length,date:tx(data.imports[0]?.eta ?? {en:'',bn:''})}):t('noImports')}</span></Button></section>
+    <section className="mt-7"><h2 className="text-xl font-bold">{t('shipsAbroad')}</h2><Button variant="ghost" className="mt-3 h-auto w-full justify-start gap-4 p-0 text-left" onClick={()=>setGroup('imports')}><img src={shipImage} alt="" className="size-24 shrink-0 object-contain" /><span className="text-lg font-semibold">{data.imports.length ? t('containerArrival',{n:data.imports.length,date:tx(data.imports[0]?.eta ?? {en:'',bn:''})}):t('noImports')}</span></Button></section>
     <SeeDetails onClick={()=>setGroup('stock')} />
     <DetailsSheet open={group!==null} onClose={()=>setGroup(null)} title={title}>
       {group==='low' ? (data.low.length ? data.low.map(l=><div key={l.id} className="mb-3 flex items-center gap-3 rounded-xl border p-4"><img src={stockImage} alt="" className="size-16 object-contain" /><div className="min-w-0 flex-1"><p className="font-bold">{tx(l.product)}</p><p className="mt-1 text-sm">{t('leftOf',{n:l.left,m:l.min})}</p><StatusBadge tone="bad">{t('lowBadge')}</StatusBadge></div></div>):<p>{t('allStocked')}</p>) : group==='imports' ? (data.imports.length ? data.imports.map(im=><div key={im.id} className="mb-3 rounded-xl border p-4"><Ship className="size-12 text-good" /><p className="mt-3 font-bold">{im.container}</p><p className="text-sm">{tx(im.from)} → {tx(im.eta)}</p><StatusBadge tone="neutral">{tx(im.status)}</StatusBadge></div>):<p>{t('noImports')}</p>) : <>
