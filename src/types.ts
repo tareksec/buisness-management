@@ -36,12 +36,14 @@ export type ProductImage = "tote" | "saree" | "honey" | "teacup" | "oil" | "wall
 export type Product = { id: string; name: Text; price: number; live: boolean; image: ProductImage; deal?: number };
 
 export type Currency = "BDT" | "USD";
+export type DashboardMetric = "moneyIn" | "profitPaid" | "payoutsDue" | "sales";
 export type DashboardStats = {
   currency: Currency;
   moneyIn: number;
   profitPaid: number;
   payoutsDue: number;
   sales: number;
+  previousMonth: Record<DashboardMetric, number>;
   /** Profit paid for the last 12 months, oldest first. */
   profitByMonth: number[];
 };
