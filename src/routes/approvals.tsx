@@ -17,6 +17,8 @@ import allClearImg from "@/assets/zones/all-clear.webp";
 export const Route = createFileRoute("/approvals")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Approvals · Business Command" },
       { name: "description", content: "Approve or reject vouchers, transfers, investors, bank accounts and dispatches." },
       { property: "og:title", content: "Approvals · Business Command" },

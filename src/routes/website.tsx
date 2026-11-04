@@ -23,6 +23,8 @@ const images: Record<ProductImage, string> = { tote, saree, honey, teacup, oil, 
 export const Route = createFileRoute("/website")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Website Control · Business Command" },
       { name: "description", content: "Open or close your shop website, show or hide products and change prices." },
       { property: "og:title", content: "Website Control · Business Command" },

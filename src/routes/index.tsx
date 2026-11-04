@@ -20,6 +20,8 @@ import approvalsImg from "@/assets/zones/approvals.webp";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Business Command · Owner workspace" },
       { name: "description", content: "See all four of your businesses at a glance: investment, stock, website and approvals." },
       { property: "og:title", content: "Business Command · Owner workspace" },

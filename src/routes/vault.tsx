@@ -123,14 +123,14 @@ function ApproveSheet({ batch, onClose, onApproved }: { batch: PayoutBatch | nul
     <Drawer.Root open={batch !== null} onOpenChange={(o) => !o && onClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-40 bg-primary/20 backdrop-blur-[2px]" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px] rounded-t-3xl bg-card px-5 pt-3 pb-6 outline-none">
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[430px] rounded-t-3xl bg-card px-5 pt-3 pb-6 outline-none illustrated-details">
           <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border" />
           {b && stage === "done" ? (
             <div className="flex flex-col items-center py-4 text-center">
               <div className="grid size-16 place-items-center rounded-full bg-good-soft text-good"><CheckCircle2 className="size-8" /></div>
               <Drawer.Title className="mt-4 text-xl font-bold">{t("payoutApproved")}</Drawer.Title>
               <Drawer.Description className="mt-1 text-sm text-muted-foreground">{t("payoutApprovedNote", { batch: b.batch })}</Drawer.Description>
-              <button onClick={onClose} className="mt-6 w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">{t("done")}</button>
+              <Button onClick={onClose} className="mt-6 w-full rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">{t("done")}</Button>
             </div>
           ) : b ? (
             <>
@@ -165,9 +165,9 @@ function ApproveSheet({ batch, onClose, onApproved }: { batch: PayoutBatch | nul
               )}
 
               <div className="mt-5 flex gap-2">
-                <button onClick={onClose} className="flex-1 rounded-2xl border py-3.5 text-sm font-semibold">{t("cancel")}</button>
+                <Button variant="outline" onClick={onClose} className="flex-1 rounded-2xl border py-3.5 text-sm font-semibold">{t("cancel")}</Button>
                 {stage === "summary" && (
-                  <button onClick={() => setStage("pin")} className="flex-[2] rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">{t("continue")}</button>
+                  <Button onClick={() => setStage("pin")} className="flex-[2] rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">{t("continue")}</Button>
                 )}
               </div>
             </>
@@ -180,8 +180,8 @@ function ApproveSheet({ batch, onClose, onApproved }: { batch: PayoutBatch | nul
 
 function PinKey({ children, onClick, label }: { children: ReactNode; onClick: () => void; label?: string }) {
   return (
-    <button onClick={onClick} aria-label={label} className="h-12 rounded-xl bg-muted text-lg font-semibold transition-colors active:bg-border">
+    <Button onClick={onClick} aria-label={label} variant="secondary" className="h-12 rounded-xl bg-muted text-lg font-semibold transition-colors active:bg-border">
       {children}
-    </button>
+    </Button>
   );
 }
