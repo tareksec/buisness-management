@@ -7,9 +7,9 @@ describe("dashboard sample data", () => {
     for (const b of businesses) expect(dashboard[b.id]?.profitByMonth).toHaveLength(12);
   });
   it("keeps current and previous metric values separately for each business currency", () => {
-    expect(dashboard.b4?.currency).toBe("USD");
-    expect(dashboard.b4?.moneyIn).toBe(14200);
-    expect(dashboard.b1?.currency).toBe("BDT");
+    expect(dashboard["b4"]?.currency).toBe("USD");
+    expect(dashboard["b4"]?.moneyIn).toBe(14200);
+    expect(dashboard["b1"]?.currency).toBe("BDT");
     for (const b of businesses) {
       const previous = dashboard[b.id]?.previousMonth;
       expect(previous).toBeDefined();
