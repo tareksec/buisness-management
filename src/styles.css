@@ -39,6 +39,12 @@
   --color-bad-soft: var(--bad-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+  --color-gold: oklch(0.83 0.14 85);
+  --color-gold-light: oklch(0.93 0.09 90);
+  --color-gold-deep: oklch(0.69 0.13 75);
+  --color-gold-edge: oklch(0.65 0.1 80);
+  --color-jar-glass: oklch(0.91 0.04 155 / 65%);
+  --color-jar-edge: oklch(0.7 0.055 155);
   --shadow-soft: 0 1px 2px oklch(0.2 0.03 255 / 4%), 0 8px 24px -12px oklch(0.2 0.03 255 / 12%);
   --shadow-phone: 0 30px 80px -30px oklch(0.2 0.03 255 / 35%);
 }
@@ -114,3 +120,27 @@
   40%, 80% { transform: translateX(10px); }
 }
 .animate-shake { animation: shake 0.4s ease-in-out; }
+
+.illustrated-screen { letter-spacing: 0; }
+.illustrated-screen button, .illustrated-screen a, .illustrated-details button, .illustrated-details a { min-height: 48px; }
+.illustrated-screen button, .illustrated-details button { white-space: normal; }
+.illustrated-screen input[type="range"] { min-height: 48px; }
+.illustrated-details { overflow-x: hidden; }
+.illustrated-details input { min-height: 48px; min-width: 0; }
+.scene-button:hover { transform: translateY(-2px); }
+.project-jar { filter: drop-shadow(0 4px 4px color-mix(in oklab, var(--foreground) 12%, transparent)); }
+.project-jar svg { width: 100% !important; height: 100% !important; }
+.project-jar[aria-pressed="true"] { filter: drop-shadow(0 0 10px var(--color-gold)); }
+.scene-supply { position: relative; aspect-ratio: 1; }
+.scene-supply img { width: 100%; height: 100%; object-fit: contain; }
+.scene-supply .scene-hit { position: absolute; display: flex; flex-direction: column; justify-content: flex-start; padding: 0; background: transparent; }
+.scene-hit span { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 9px; box-shadow: var(--shadow-soft); font-size: 12px; font-weight: 700; }
+.scene-hit.stock { left: 0; top: 12%; width: 40%; height: 43%; }
+.scene-hit.transit { left: 37%; top: 42%; width: 30%; height: 30%; }
+.scene-hit.delivered { right: 0; top: 63%; width: 34%; height: 29%; }
+.scene-hit.low { left: 0; top: 57%; width: 35%; height: 18%; }
+.scene-hit.low span { background: var(--bad-soft); color: var(--bad); }
+@media (prefers-reduced-motion: reduce) {
+  .animate-screen-in, .animate-shake { animation: none; }
+  .illustrated-screen *, .illustrated-details * { transition: none !important; }
+}

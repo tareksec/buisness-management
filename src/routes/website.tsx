@@ -5,9 +5,11 @@ import { Camera, Globe, ImagePlus, Search, Settings2, Tag } from "lucide-react";
 import { products, type Product, type ProductImage } from "@/data/mock";
 import { useApp } from "@/lib/app-state";
 import { ScreenHeader } from "@/components/ScreenHeader";
-import { PreviewFooter } from "@/components/PreviewFooter";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Sheet, SheetDescription, SheetTitle } from "@/components/Sheets";
+import { DetailsSheet, SeeDetails, StateSentence } from "@/components/IllustratedScreen";
+import { Button } from "@/components/ui/button";
+import scene from "@/assets/zones/website.webp";
 import { cn } from "@/lib/utils";
 import tote from "@/assets/products/tote.webp";
 import saree from "@/assets/products/saree.webp";
@@ -21,6 +23,8 @@ const images: Record<ProductImage, string> = { tote, saree, honey, teacup, oil, 
 export const Route = createFileRoute("/website")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Website Control · Business Command" },
       { name: "description", content: "Open or close your shop website, show or hide products and change prices." },
       { property: "og:title", content: "Website Control · Business Command" },
@@ -34,8 +38,15 @@ type Edits = Record<string, { live?: boolean; price?: number; photo?: string }>;
 
 function WebsiteScreen() {
   const { t, tx, business: b, businessId, setSiteOnline } = useApp();
+  const [details, setDetails] = useState(false);
   const [query, setQuery] = useState("");
   const [edits, setEdits] = useState<Edits>({});
+  const [undo, setUndo] = useState<{ businessId: string; id: string; live: boolean } | null>(null);
+  useEffect(() => {
+    if (!undo) return;
+    const timer = setTimeout(() => setUndo(null), 5000);
+    return () => clearTimeout(timer);
+  }, [undo]);
   const [manage, setManage] = useState(false);
   const [photoFor, setPhotoFor] = useState<Product | null>(null);
 
@@ -50,6 +61,7 @@ function WebsiteScreen() {
   const toggle = (p: ReturnType<typeof view>) => {
     const next = !p.live;
     patch(p.id, { live: next });
+    setUndo({ businessId, id: p.id, live: p.live });
     toast(t(next ? "nowLive" : "nowHidden", { name: tx(p.name) }), {
       duration: 5000,
       action: { label: t("undo"), onClick: () => patch(p.id, { live: !next }) },
@@ -57,9 +69,11 @@ function WebsiteScreen() {
   };
 
   return (
-    <div className="px-5 pt-6">
+    <div className="illustrated-screen px-5 pt-6 pb-8">
       <ScreenHeader titleKey="websiteTitle" />
 
+      <Button variant="ghost" className="relative mt-4 h-auto w-full p-0 hover:bg-transparent" onClick={()=>setManage(true)} aria-label={t("manage")}><img src={scene} alt="" className="aspect-square w-full object-contain" /><span className="absolute right-2 bottom-5 rounded-full border bg-card px-4 py-2 shadow-soft">{b.website.online?t("online"):t("offline")}</span></Button>
+      <StateSentence tone={b.website.online?"good":"bad"}>{t("websiteSentence",{name:tx(b.website.siteName),n:b.website.productsLive})}</StateSentence>
       <section className="mt-5 flex items-center gap-3 rounded-2xl border bg-card p-4 shadow-soft">
         <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-muted"><Globe className="size-5" /></div>
         <div className="min-w-0 flex-1">
@@ -67,25 +81,29 @@ function WebsiteScreen() {
           <p className="truncate text-xs text-muted-foreground">{b.website.domain}</p>
           <StatusBadge tone={b.website.online ? "good" : "bad"} className="mt-1.5">{b.website.online ? t("online") : t("offline")}</StatusBadge>
         </div>
-        <button onClick={() => setManage(true)} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold">
+        <Button variant="outline" onClick={() => setManage(true)} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold">
           <Settings2 className="size-4" /> {t("manage")}
-        </button>
+        </Button>
       </section>
 
+      <section className="mt-7 border-b pb-7"><h2 className="text-sm font-semibold text-muted-foreground">{t("productsLive")}</h2><p className="mt-2 text-[32px] font-extrabold">{t("items",{n:b.website.productsLive})}</p><SeeDetails onClick={()=>setDetails(true)} /></section>
+      <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("websiteTitle")}>
       <label className="mt-4 flex items-center gap-2 rounded-xl border bg-card px-3 focus-within:border-primary">
         <Search className="size-4 text-muted-foreground" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search")} aria-label={t("search")} className="w-full bg-transparent py-3 text-sm outline-none" />
       </label>
 
+      {undo && undo.businessId === businessId && <Button variant="outline" className="mt-3 min-h-12 w-full" onClick={() => { patch(undo.id, { live: undo.live }); setUndo(null); }}>{t("undo")}</Button>}
+
       <div className="mt-4 grid grid-cols-2 gap-3">
-        {list.map((p) => <ProductCard key={`${businessId}:${p.id}`} p={p} onToggle={() => toggle(p)} onPhoto={() => setPhotoFor(p)} onPrice={(price) => patch(p.id, { price })} />)}
+        {list.map((p) => <ProductCard key={`${businessId}:${p.id}`} p={p} onToggle={() => toggle(p)} onPhoto={() => {setDetails(false);setPhotoFor(p)}} onPrice={(price) => patch(p.id, { price })} />)}
       </div>
       {list.length === 0 && <p className="mt-4 rounded-2xl border bg-card p-4 text-sm text-muted-foreground">{t("noResults")}</p>}
 
-      <PreviewFooter />
+      </DetailsSheet>
 
       <ManageSheet open={manage} online={b.website.online} onClose={() => setManage(false)} onChange={(v) => { setSiteOnline(businessId, v); setManage(false); toast.success(v ? t("online") : t("offline")); }} />
-      <PhotoSheet product={photoFor} onClose={() => setPhotoFor(null)} onUse={(url) => { if (photoFor) patch(photoFor.id, { photo: url }); setPhotoFor(null); }} />
+      <PhotoSheet product={photoFor} onClose={() => {setPhotoFor(null);setDetails(true)}} onUse={(url) => { if (photoFor) patch(photoFor.id, { photo: url }); setPhotoFor(null); setDetails(true); }} />
     </div>
   );
 }
@@ -104,10 +122,10 @@ function ProductCard({ p, onToggle, onPhoto, onPrice }: { p: Product & { photo: 
 
   return (
     <div className={cn("overflow-hidden rounded-2xl border bg-card shadow-soft transition-opacity", !p.live && "opacity-75")}>
-      <button onClick={onPhoto} className="relative block aspect-square w-full bg-muted" aria-label={t("photoTitle")}>
+      <Button onClick={onPhoto} variant="ghost" className="relative block h-auto aspect-square w-full bg-muted p-0" aria-label={t("photoTitle")}>
         <img src={p.photo} alt={tx(p.name)} width={360} height={360} loading="lazy" className="size-full object-cover" />
         <span className="absolute right-2 bottom-2 grid size-7 place-items-center rounded-full bg-card/90"><Camera className="size-3.5" /></span>
-      </button>
+      </Button>
       <div className="p-3">
         <p className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">{tx(p.name)}</p>
         {editing ? (
@@ -117,26 +135,26 @@ function ProductCard({ p, onToggle, onPhoto, onPrice }: { p: Product & { photo: 
               <input ref={input} inputMode="numeric" pattern="[0-9]*" value={draft} onChange={(e) => setDraft(e.target.value.replace(/\D/g, ""))} onKeyDown={(e) => e.key === "Enter" && save()} aria-label={t("editPrice")} className="w-full bg-transparent py-1.5 text-sm font-semibold outline-none" />
             </div>
             <div className="mt-2 flex gap-1.5">
-              <button onClick={() => setEditing(false)} className="flex-1 rounded-lg border py-1.5 text-xs font-semibold">{t("cancel")}</button>
-              <button onClick={save} className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-semibold text-primary-foreground">{t("save")}</button>
+              <Button onClick={() => setEditing(false)} className="flex-1 rounded-lg border py-1.5 text-xs font-semibold">{t("cancel")}</Button>
+              <Button onClick={save} className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-semibold text-primary-foreground">{t("save")}</Button>
             </div>
           </div>
         ) : (
-          <button onClick={() => { setDraft(String(p.price)); setEditing(true); }} aria-label={t("editPrice")} className="mt-1 min-h-11 min-w-11 text-left text-lg font-extrabold tracking-tight underline decoration-border decoration-dashed underline-offset-4">
+          <Button onClick={() => { setDraft(String(p.price)); setEditing(true); }} aria-label={t("editPrice")} variant="ghost" className="mt-1 h-auto min-h-12 min-w-12 p-0 text-left text-lg font-extrabold tracking-tight underline decoration-border decoration-dashed underline-offset-4">
             {money(p.price)}
-          </button>
+          </Button>
         )}
         {p.deal && (
           <p className="mt-1.5 flex gap-1 rounded-lg bg-warn-soft p-1.5 text-[10.5px] leading-snug font-medium text-warn">
             <Tag className="mt-px size-3 shrink-0" /> {t("dealLive", { p: `৳ ${num(p.deal)}` })}
           </p>
         )}
-        <button onClick={onToggle} role="switch" aria-checked={p.live} className="mt-1 flex min-h-11 w-full items-center justify-between">
+        <Button onClick={onToggle} role="switch" aria-checked={p.live} variant="ghost" className="mt-1 h-auto flex min-h-12 w-full items-center justify-between">
           <span className={cn("text-xs font-semibold", p.live ? "text-good" : "text-muted-foreground")}>{p.live ? t("live") : t("hidden")}</span>
           <span className={cn("relative h-6 w-10 rounded-full transition-colors", p.live ? "bg-good" : "bg-border")}>
             <span className={cn("absolute top-0.5 size-5 rounded-full bg-card shadow transition-all", p.live ? "left-[18px]" : "left-0.5")} />
           </span>
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -151,23 +169,23 @@ function ManageSheet({ open, online, onClose, onChange }: { open: boolean; onlin
     <Sheet open={open} onClose={onClose}>
       <SheetTitle className="text-lg font-bold">{t("siteSheetTitle")}</SheetTitle>
       <SheetDescription className="sr-only">{t("siteSwitch")}</SheetDescription>
-      <button role="switch" aria-checked={shown} onClick={() => setPending(!shown)} className="mt-4 flex w-full items-center justify-between rounded-xl bg-muted p-4">
+      <Button role="switch" aria-checked={shown} onClick={() => setPending(!shown)} variant="ghost" className="mt-4 h-auto flex w-full items-center justify-between rounded-xl bg-muted p-4">
         <span className="text-sm font-semibold">{t("siteSwitch")}</span>
         <span className={cn("relative h-7 w-12 rounded-full transition-colors", shown ? "bg-good" : "bg-border")}>
           <span className={cn("absolute top-0.5 size-6 rounded-full bg-card shadow transition-all", shown ? "left-[22px]" : "left-0.5")} />
         </span>
-      </button>
+      </Button>
       {pending !== null && pending !== online && (
         <p className={cn("mt-3 rounded-xl p-3 text-sm font-medium", pending ? "bg-good-soft text-good" : "bg-bad-soft text-bad")}>
           {pending ? t("confirmOnline") : t("confirmOffline")}
         </p>
       )}
       <div className="mt-5 flex gap-2">
-        <button onClick={onClose} className="flex-1 rounded-2xl border py-3.5 text-sm font-semibold">{t("cancel")}</button>
+        <Button onClick={onClose} className="flex-1 rounded-2xl border py-3.5 text-sm font-semibold">{t("cancel")}</Button>
         {pending !== null && pending !== online && (
-          <button onClick={() => onChange(pending)} className={cn("flex-[2] rounded-2xl py-3.5 text-sm font-semibold text-primary-foreground", pending ? "bg-good" : "bg-bad")}>
+          <Button onClick={() => onChange(pending)} className={cn("flex-[2] rounded-2xl py-3.5 text-sm font-semibold text-primary-foreground", pending ? "bg-good" : "bg-bad")}>
             {pending ? t("yesOnline") : t("yesOffline")}
-          </button>
+          </Button>
         )}
       </div>
     </Sheet>
@@ -189,8 +207,8 @@ function PhotoSheet({ product, onClose, onUse }: { product: Product | null; onCl
       </label>
       <p className="mt-2 text-center text-xs text-muted-foreground">{t("photoNote")}</p>
       <div className="mt-5 flex gap-2">
-        <button onClick={onClose} className="flex-1 rounded-2xl border py-3.5 text-sm font-semibold">{t("cancel")}</button>
-        {preview && <button onClick={() => onUse(preview)} className="flex-[2] rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">{t("usePhoto")}</button>}
+        <Button onClick={onClose} className="flex-1 rounded-2xl border py-3.5 text-sm font-semibold">{t("cancel")}</Button>
+        {preview && <Button onClick={() => onUse(preview)} className="flex-[2] rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground">{t("usePhoto")}</Button>}
       </div>
     </Sheet>
   );

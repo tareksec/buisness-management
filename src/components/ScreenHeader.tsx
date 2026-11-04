@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useApp, type TKey } from "@/lib/app-state";
+import { Button } from "@/components/ui/button";
 import { BusinessPills } from "./BusinessPills";
 
 export function ScreenHeader({ titleKey }: { titleKey: TKey }) {
@@ -8,10 +9,10 @@ export function ScreenHeader({ titleKey }: { titleKey: TKey }) {
   return (
     <>
       <header className="flex items-center gap-3">
-        <Link to="/" aria-label={t("back")} className="grid size-11 shrink-0 place-items-center rounded-full border bg-card shadow-soft">
+        <Button asChild variant="outline" className="size-12 shrink-0 rounded-full"><Link to="/" aria-label={t("back")}>
           <ArrowLeft className="size-5" />
-        </Link>
-        <h1 className="text-2xl font-extrabold tracking-tight">{t(titleKey)}</h1>
+        </Link></Button>
+        <h1 className="text-2xl font-extrabold ">{t(titleKey)}</h1>
       </header>
       <BusinessPills className="mt-5" />
     </>

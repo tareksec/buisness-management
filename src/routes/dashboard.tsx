@@ -4,12 +4,16 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { attention, dashboard } from "@/data/mock";
 import type { Currency, DashboardStats } from "@/types";
 import { useApp, toLangDigits, type TKey } from "@/lib/app-state";
-import { PreviewFooter } from "@/components/PreviewFooter";
+import { DetailsSheet, SeeDetails, StateSentence } from "@/components/IllustratedScreen";
+import { Button } from "@/components/ui/button";
+import scene from "@/assets/zones/investment.webp";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Dashboard · Business Command" },
       { name: "description", content: "Money in, profit paid, payouts due and sales for each of your four businesses." },
       { property: "og:title", content: "Dashboard · Business Command" },
@@ -35,25 +39,24 @@ function useFormat() {
 
 function Dashboard() {
   const { t, tx, businesses, businessId, setBusinessId } = useApp();
+  const [details, setDetails] = useState(false);
   const [all, setAll] = useState(false);
   const fmt = useFormat();
   const selected = all ? ALL : businessId;
-  const stats = dashboard[businessId]!;
+  const stats = dashboard[businessId];
+  if (!stats) return null;
   const items = attention.filter((a) => all || a.businessId === businessId);
-  const nameOf = (id: string) => tx(businesses.find((b) => b.id === id)!.name);
+  const nameOf = (id: string) => tx(businesses.find((b) => b.id === id)?.name ?? {en:"",bn:""});
 
   return (
-    <div className="px-5 pt-6">
-      <Link to="/" className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full border bg-card px-4 text-sm font-medium shadow-soft">
-        <ArrowLeft className="size-4" /> {t("back")}
-      </Link>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight">{t("dashboard")}</h1>
+    <div className="illustrated-screen px-5 pt-6 pb-8">
+      <header className="flex items-center gap-3"><Button asChild variant="outline" className="size-12 shrink-0 rounded-full"><Link to="/" aria-label={t("back")}><ArrowLeft /></Link></Button><h1 className="text-2xl font-extrabold">{t("dashboard")}</h1></header>
 
       <div className="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pt-1 pb-1">
         {[{ id: ALL, label: t("allBusinesses") }, ...businesses.map((b) => ({ id: b.id, label: tx(b.name) }))].map((p) => (
-          <button
+          <Button
             key={p.id}
-            aria-pressed={selected === p.id}
+            variant="outline" aria-pressed={selected === p.id}
             onClick={() => (p.id === ALL ? setAll(true) : (setAll(false), setBusinessId(p.id)))}
             className={cn(
               "min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold transition-colors",
@@ -61,10 +64,16 @@ function Dashboard() {
             )}
           >
             {p.label}
-          </button>
+          </Button>
         ))}
       </div>
 
+      <Button variant="ghost" className="relative mt-4 h-auto w-full p-0 hover:bg-transparent" aria-label={t("seeDetails")} onClick={()=>setDetails(true)}><img src={scene} alt="" className="aspect-square w-full object-contain" /><span className="absolute right-2 bottom-5 rounded-full border bg-card px-4 py-2 shadow-soft">{all?t("allBusinesses"):tx(businesses.find(b=>b.id===businessId)?.name ?? {en:"",bn:""})}</span></Button>
+      <StateSentence tone={items.length?"warn":"good"}>{all?t("businessOverview",{n:businesses.length}):t("monthOverview")}</StateSentence>
+      <section className="border-b pb-7"><h2 className="text-sm font-semibold text-muted-foreground">{t("moneyIn")}</h2>{all?businesses.map(b=>{const d=dashboard[b.id];return d?<div key={b.id} className="mt-4"><p className="text-sm font-semibold">{tx(b.name)}</p><p className="mt-1 text-[32px] font-extrabold break-words">{fmt(d.moneyIn,d.currency)}</p></div>:null}):<p className="mt-2 text-[32px] font-extrabold">{fmt(stats.moneyIn,stats.currency)}</p>}</section>
+      <section className="mt-7"><h2 className="text-xl font-bold">{t("needsAttention")}</h2><p className="mt-3 text-lg">{items.length?t("pending",{n:items.length}):t("nothingAttention")}</p></section>
+      <SeeDetails onClick={()=>setDetails(true)} />
+      <DetailsSheet open={details} onClose={()=>setDetails(false)} title={t("dashboard")}>
       {all ? (
         <section className="mt-5 space-y-3">
           <p className="text-xs text-muted-foreground">{t("perBusiness")}</p>
@@ -73,7 +82,8 @@ function Dashboard() {
               <p className="text-sm font-semibold">{t(label)}</p>
               <ul className="mt-2 divide-y">
                 {businesses.map((b) => {
-                  const s = dashboard[b.id]!;
+                  const s = dashboard[b.id];
+                  if (!s) return null;
                   return (
                     <li key={b.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                       <span className="min-w-0 truncate text-muted-foreground">{tx(b.name)}</span>
@@ -117,7 +127,7 @@ function Dashboard() {
         </div>
       </section>
 
-      <PreviewFooter />
+      </DetailsSheet>
     </div>
   );
 }
